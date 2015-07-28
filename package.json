@@ -1,0 +1,12 @@
+{
+  "name": "train_and_coach",
+  "version": "0.0.1",
+  "description": "hackathon project",
+  "dependencies": {
+    "async": "^1.4.0",
+    "body-parser": "^1.13.2",
+    "express": "^4.13.1",
+    "log4js": "^0.6.26",
+    "mongodb": "^2.0.39"
+  }
+}
