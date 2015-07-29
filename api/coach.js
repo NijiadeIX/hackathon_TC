@@ -123,21 +123,25 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
  * @param  {Function} callback  [description]
  */
 function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
+	var getCoachInfoTask = function(callback_1) {
+		_getCoachPath(stationA, cityA, stationB, cityB, startDate, function(data) {
+			callback_1(null, data);
+		});
+	};
 
-	async.parallel({
-	    coachInfo: function(callback){
-	    	_getCoachPath(stationA, cityA, stationB, cityB, startDate, function(data) {
-	    		callback(null, data);
-	    	});
-	    },
-	    time: function(callback){
-	    	_getTime(cityA, cityB, function(time) {
-	    		callback(null, time);
-	    	});
-	    }
-	},
-	function(err, results) {
-	 	if (err) {
+	var getTimeTask = function(callback_1){
+    	_getTime(cityA, cityB, function(time) {
+    		callback_1(null, time);
+    	});
+    };
+
+    var parallelTasks = {
+    	coachInfo : getCoachInfoTask,
+    	time : getTimeTask
+    };
+
+    var finalHandler = function(err, results) {
+ 	 	if (err) {
 	 		log.error('getCoachPath> ' + err.name + ':' + err.message);
 	 		callback(null);
 	 		return;
@@ -148,8 +152,11 @@ function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 	 	var time = results.time;
 	 	var coachInfo = results.coachInfo;
 	 	coachInfo.time = time;
-	 	callback(coachInfo);
-	});
+	 	callback(coachInfo);   	
+	};
+
+    //并行执行任务
+	async.parallel(parallelTasks, finalHandler);
 } 
 
 module.exports._getTime      = _getTime; //测过
