@@ -6,19 +6,20 @@ var CoachDAO = require('coach.js');
 var T = "train"; 
 var C = "coach";
 
-
+/*
 exports.queryStation = function(req, res) {
-   console.log("Start Query Station: " + req.stationName);
+  console.log("Start Query Station: " + req.stationName);
 
-   //是否需要station组装操作，将信息标记火，汽
-   LocationDAO.collectStationByCity(req.stationName, function(stationCollection, err){
+    //是否需要station组装操作，将信息标记火，汽
+    LocationDAO.collectStationByCity(req.stationName, function(stationCollection, err){
        if(err){
            res.send({'success':false, 'info':err});
        }else{
            res.send({'success':true, 'info':stationCollection});
            //res.status(200).json({'success':true, 'info':stationCollection})
-   })
+    })
 }
+*/
 
 exports.queryTransport = function(req, res) {
    var transCollection = queryEnginee(req.body, function(transCollection){
@@ -28,17 +29,75 @@ exports.queryTransport = function(req, res) {
 
 
 function queryEnginee(transInfo, cb){
-   var collection;
-   var srcInfo = transInfo.src;
-   var destInfo = transInfo.dest;
+    console.log("Start Query...");
 
-   console.log("Start Query...");
+    var collection;
+    var srcStation = transInfo.srcStation;
+    var destStation = transInfo.destStation;
+    var srcCity = transInfo.srcCity;
+    var destCity = transInfo.destCity;
 
-   var func = function(collection){
-       cb(collection);
-   };
+    queryByCity(srcCity, destCity, function(collection){
+        var resCollection = collection;
 
-   for(var iterSrc in srcInfo){
+        if(srcStation && destStation)
+        {
+            resCollection = filterByStation(srcStation, destStation, collection);
+        }
+
+        cb(resCollection);
+    });
+
+    
+}
+
+
+function queryByCity(srcCity, destCity, cb){
+
+    var func = function(err, infoTT){
+        if(err)
+        {
+            //应该不会到这儿
+        }
+        else
+        {
+            //首先比较城市是否相同
+            if(infoTT.srcCity == srcCity && infoTT.destCity == destCity)
+            {
+                //火火，直接返回
+                var collection = {"res":[]};//TODO
+                for(int i = 0; i < info.length; ++i)
+                {
+                   collection.push({"path":infoTT[i]});
+                }
+
+                cb(collection);
+            }
+            if(infoTT.srcCity != srcCity && infoTT.destCity == destCity)
+            {
+                //汽火
+                
+            }
+            if(infoTT.srcCity == srcCity && infoTT.destCity != destCity)
+            {
+                //火汽
+            }
+            if(infoTT.srcCity != srcCity && infoTT.destCity != destCity)
+            {
+                //汽汽
+            }
+        }
+    };
+
+    queryTrain(srcCity, destCity, func);
+}
+
+
+function filterByStation(srcStation, destStation, collection){
+    var srcInfo = srcStation;
+    var destInfo = destStation;
+
+    for(var iterSrc in srcInfo){
        for(var iterDest in destInfo)
        {
            //火，火
@@ -63,8 +122,35 @@ function queryEnginee(transInfo, cb){
            }
 
        }
-   }
+    }
+    //
+
+
+    var func = function(collection){
+       cb(collection);
+    };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function Train2Train(srcName, destName, cb){
    var func = function(infoTT){
@@ -241,7 +327,7 @@ function queryTrain(srcName, destName, cb){
        {
            console.log("TrainDao.query Failed: " + err);
        }
-       cd(info);
+       cb(info);
    }); 
 }
 
@@ -251,7 +337,7 @@ function queryCoach(srcName, destName, cb){
        {
            console.log("TrainDao.query Failed: " + err);
        }
-       cd(info);
+       cb(info);
    }); 
 }
 
