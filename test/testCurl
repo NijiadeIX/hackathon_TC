@@ -1,4 +1,4 @@
-kD5pgcIZt0o5izHgB81mZ6uU
+	kD5pgcIZt0o5izHgB81mZ6uU
 
 http://api.map.baidu.com/place/v2/suggestion?q=罗城&region=罗城&output=json&ak=kD5pgcIZt0o5izHgB81mZ6uU
 
@@ -42,6 +42,7 @@ http://api.map.baidu.com/place/v2/search?ak=kD5pgcIZt0o5izHgB81mZ6uU&output=json
 
 /?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bt&c=1&sn=2$$$$$$%E5%AE%89%E9%98%B3%E5%B8%82$$0$$$$&en=2$$$$$$%E5%8C%97%E4%BA%AC%E5%B8%82$$0$$$$&sc=1&ec=1&pn=0&rn=5&exptype=dep&exptime=2015-07-31%2
 
+ /?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=baidu&pcevaname=pc3&qt=bt&c=1&sn=2$$$$$$%E6%9F%B3%E5%B7%9E%E5%B8%82$$0$$$$&en=2$$$$$$%E4%B8%8A%E6%B5%B7%E5%B8%82$$0$$$$&sc=1&ec=1&pn=0&rn=5&expt
 
 {
 "res":
@@ -82,3 +83,6 @@ http://api.map.baidu.com/place/v2/search?ak=kD5pgcIZt0o5izHgB81mZ6uU&output=json
 		}
 	]
 }
+
+
+type = 1//火车
