@@ -254,7 +254,7 @@ function fetchAllCitysInfo() {
 		parallelFetchCityInfo(citys, function(cityDetails) {
 			log.trace(cityDetails);
 
-			saveToDb(cityDetails, function() {});
+			//saveToDb(cityDetails, function() {});
 		});
 	});
 }

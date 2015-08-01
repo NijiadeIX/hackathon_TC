@@ -17,7 +17,6 @@ function get(url, callback) {
 		res.on('end', function() {
 			var data;
 			var lenOfBody = resBody.length;
-			var contentType = res.headers['content-type'].toLowerCase();
 			if (lenOfBody > 0) {
 				try {
 					data = JSON.parse(resBody);
@@ -78,7 +77,6 @@ function post(url, body, callback) {
 		res.on('end', function() {
 			var data;
 			var lenOfBody = resBody.length;
-			var contentType = res.headers['content-type'].toLowerCase();
 			if (lenOfBody > 0) {
 				try {
 					data = JSON.parse(resBody);
