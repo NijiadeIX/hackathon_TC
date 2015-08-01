@@ -18,3 +18,11 @@ http://api.map.baidu.com/place/v2/search?ak=kD5pgcIZt0o5izHgB81mZ6uU&output=json
 
 
  http://apis.baidu.com/apistore/location/near?keyWord=火车站&location=24.783074,108.911225&radius=300000&output=json -H 'apikey:c3c4c2745abf456a165de32ae309ed50'
+
+ var a = require('./api/city.js');
+
+
+ var a = require('./api/mongo.js');
+ a.connect(function(err, db) {
+ 	db.collection('test').insertOne({'asdfadsf':12344}, function(err, result) {db.close();});
+ });

@@ -18,7 +18,7 @@ function get(url, callback) {
 			var data;
 			var lenOfBody = resBody.length;
 			var contentType = res.headers['content-type'].toLowerCase();
-			if (lenOfBody > 0 && contentType == 'application/json') {
+			if (lenOfBody > 0) {
 				try {
 					data = JSON.parse(resBody);
 				} catch(err) {
@@ -79,7 +79,7 @@ function post(url, body, callback) {
 			var data;
 			var lenOfBody = resBody.length;
 			var contentType = res.headers['content-type'].toLowerCase();
-			if (lenOfBody > 0 && contentType == 'application/json') {
+			if (lenOfBody > 0) {
 				try {
 					data = JSON.parse(resBody);
 				} catch(err) {
