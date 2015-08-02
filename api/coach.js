@@ -280,8 +280,5 @@ function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 	async.parallel(parallelTasks, finalHandler);
 } 
 
-module.exports._getTime      = _getTime; //测过
-module.exports._getCoachPath = _getCoachPath;  //未测试
-module.exports.getCoachPath  = getCoachPath;  //未测试
+module.exports.getCoachPath  = getCoachPath; 
 
-//TODO 一些细节问题还没解决，单元测试还没有完成

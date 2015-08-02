@@ -353,7 +353,7 @@ function _getTrainPath(cityA, stationA, cityB, stationB, startDate, callback) {
 /**
  * 查询火车路线信息
  */
-function getTrainPath(cityA, stationA, cityB, stationB, startDate, callback) {
+function getTrainPath(stationA, cityA, stationB, cityB,  startDate, callback) {
 	_getTrainPath(cityA, null, cityB, null, null, function(data) {
 		addPrice(_parseTrainData(data), callback);
 	});
