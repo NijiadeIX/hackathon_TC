@@ -37,12 +37,8 @@ function _getTime(cityA, cityB, callback) {
 	};
 
 	var url = URL.format(urlObject);
-	log.trace(url);
 
 	var handler = function(err, statusCode, data) {
-		log.trace(statusCode);
-		log.trace(data);
-
 		var time = 0;
 
 		if (err) {
@@ -51,14 +47,16 @@ function _getTime(cityA, cityB, callback) {
 			return;
 		}
 
-		if (statusCode == 200) {
-			if (data.result && 
-				data.result.elements && 
-				data.result.elements.duration && 
-				data.result.elements.duration.value) {
+		if (statusCode == 200 && 
+			data &&
+			data.result && 
+			data.result.elements && 
+			data.result.elements.length > 0 &&
+			data.result.elements[0].duration && 
+			data.result.elements[0].duration.value
+			) {
 
-				time = data.result.elements.duration.value;
-			}
+			time = data.result.elements[0].duration.value;
 		}
 
 		callback(time);
@@ -106,10 +104,7 @@ to:
 
 
  */
-function _parseCoachData(originData) {
-	log.trace("origin data");
-	log.trace(originData);
-
+function _parseCoachData(originData, fromCity, toCity) {
 	var destData = {};
 	//数据格式不对，直接返回null
 	if (!originData || !originData.time || !originData.data || originData.data.length == 0) {
@@ -122,38 +117,70 @@ function _parseCoachData(originData) {
 	pathInfo.city = [];
 	pathInfo.path = [];
 
-	var fromCity, toCity, time;
-	time     = originData.time;	
-	fromCity = originData.data[0].from_city_name;
-	toCity   = originData.data[0].to_city_name;
+	var time;
+	time = originData.time;	
+
 	pathInfo.city.push(fromCity);
 	pathInfo.city.push(toCity);
 
-	for(aPath in originData.data) {
+	var dataList = originData.data;
+	for(idx in dataList) {
 		var element = {};
-		element.name = aPath.bus_number;
-		element.from_station = aPath.from_station_name;
-		element.to_station = aPath.to_station_name;
-		element.price = aPath.price;
+		element.type = 'coach';
+		element.name = dataList[idx].bus_number;
+		element.from_station = dataList[idx].from_station_name;
+		element.to_station = dataList[idx].to_station_name;
+		element.price = dataList[idx].full_price << 0;
 
-		var timeObject = _parseTime(aPath.start_time, time);
+		var timeObject = _parseTime(dataList[idx].from_time, time);
 		element.depart_time = timeObject.departTime;
 		element.arrive_time = timeObject.arriveTime;
 
-		pathinfo.path.push(element);
+		pathInfo.path.push(element);
 	}
 
 	destData.res.push(pathInfo);
 
-	log.trace('dest data');
-	log.trace(destData);
 	return destData;
 }
 
+// fromTime '01:11' duration '55'
+// '002:16'
 function _parseTime(beginTime, duration) {
-	debugger;
-	//TODO
-	return {"departTime":"010:11", "arriveTime":"011:11"};
+	var retData = {};
+	var hourInt, minuteInt, durationInt;
+	var departTime, arriveTime;
+	var dayCount = 0;
+	var cells = beginTime.split(':');
+
+	departTime = '0' + beginTime;
+
+	hourInt = parseInt(cells[0]);
+	minuteInt = parseInt(cells[1]);
+	durationInt = parseInt(duration);
+
+	minuteInt += durationInt / 60 << 0;
+	hourInt += (minuteInt / 60) << 0;
+	dayCount += (hourInt / 24) << 0;
+
+	hourInt %= 24;
+	minuteInt %= 60;
+
+	arriveTime = dayCount.toString();
+
+	if (hourInt < 10) 
+		arriveTime = arriveTime + '0' + hourInt;
+	else
+		arriveTime = arriveTime + hourInt;
+
+	arriveTime += ':';
+
+	if (minuteInt < 10) 
+		arriveTime = arriveTime + '0' + minuteInt;
+	else
+		arriveTime = arriveTime + minuteInt;
+
+	return {"departTime" : departTime, "arriveTime" : arriveTime};
 }
 
 /**
@@ -170,19 +197,17 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 		protocol : 'http:',
 		host : ctripInterface.host,
 		pathname : ctripInterface.stationToStationPathName,
-		param : '/bus/busList',
-		from : cityA,
-		to : cityB,
-		date : startDate
+		query : {
+			param : '/bus/busList',
+			from : cityA,
+			to : cityB,
+			date : startDate
+		}
 	};
 
 	var url = URL.format(urlObject);
-	log.trace(url);
 
 	var handler = function(err, statusCode, data) {
-		log.trace(statusCode);
-		log.trace(data);
-
 		var retData = null;
 
 		if (err) {
@@ -211,9 +236,13 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
  * @param  {Function} callback  [description]
  */
 function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
+	var prettyCityA, prettyCityB;
+	prettyCityA = cityA.substring(0, cityA.length - 1);
+	prettyCityB = cityB.substring(0, cityB.length - 1);
+
 	var getCoachInfoTask = function(callback_1) {
 		//获取没有耗时的线路信息
-		_getCoachPath(stationA, cityA, stationB, cityB, startDate, function(data) {
+		_getCoachPath(stationA, prettyCityA, stationB, prettyCityB, startDate, function(data) {
 			callback_1(null, data);
 		});
 	};
@@ -237,15 +266,13 @@ function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 	 		return;
 	 	}
 
-	 	log.trace(results);
-
 	 	//给线路信息加上耗时
 	 	var time = results.time;
 	 	var coachInfo = results.coachInfo;
-	 	coachInfo.time = time;
+	 	coachInfo.time = time;	
 
 	 	//解析成翔B需要的格式
-	 	var retData = _parseCoachData(coachInfo);
+	 	var retData = _parseCoachData(coachInfo, cityA, cityB);
 	 	callback(retData);   	
 	};
 

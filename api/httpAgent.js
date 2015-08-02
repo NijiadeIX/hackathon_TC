@@ -1,5 +1,6 @@
 var http = require('http');
 var URL  = require('url');
+var log = require('./log.js')('httpAgeng.js');
 
 /**
  * HTTP get method
