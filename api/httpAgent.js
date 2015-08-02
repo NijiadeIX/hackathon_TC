@@ -1,5 +1,6 @@
 var http = require('http');
 var URL  = require('url');
+var log = require('./log.js')('httpAgeng.js');
 
 /**
  * HTTP get method
@@ -17,8 +18,7 @@ function get(url, callback) {
 		res.on('end', function() {
 			var data;
 			var lenOfBody = resBody.length;
-			var contentType = res.headers['content-type'].toLowerCase();
-			if (lenOfBody > 0 && contentType == 'application/json') {
+			if (lenOfBody > 0) {
 				try {
 					data = JSON.parse(resBody);
 				} catch(err) {
@@ -78,8 +78,7 @@ function post(url, body, callback) {
 		res.on('end', function() {
 			var data;
 			var lenOfBody = resBody.length;
-			var contentType = res.headers['content-type'].toLowerCase();
-			if (lenOfBody > 0 && contentType == 'application/json') {
+			if (lenOfBody > 0) {
 				try {
 					data = JSON.parse(resBody);
 				} catch(err) {

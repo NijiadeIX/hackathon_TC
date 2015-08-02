@@ -1,500 +1,430 @@
-
-var async = require('async.js');
-var LocationDAO = require('location.js'); 
-var TrainDAO = require('train.js'); 
-var CoachDAO = require('coach.js'); 
-var T = "train"; 
+var async = require('async');
+var log = require('./log.js')("debug");
+var TrainDAO = require('./trainTest.js');
+var CoachDAO = require('./coachTest.js');
+var T = "train";
 var C = "coach";
+var CT = "coachtrain";
 
-/*
-exports.queryStation = function(req, res) {
-  console.log("Start Query Station: " + req.stationName);
-
-    //是否需要station组装操作，将信息标记火，汽
-    LocationDAO.collectStationByCity(req.stationName, function(stationCollection, err){
-       if(err){
-           res.send({'success':false, 'info':err});
-       }else{
-           res.send({'success':true, 'info':stationCollection});
-           //res.status(200).json({'success':true, 'info':stationCollection})
-    })
-}
-*/
 
 exports.queryTransport = function(req, res) {
-   var transCollection = queryEnginee(req.body, function(transCollection){
-       if(transCollection != null)
-           res.send({'success':true, 'info':transCollection}); }
-   });
-
-
-function queryEnginee(transInfo, cb){
-    console.log("Start Query...");
-
-    var collection;
-    var srcStation = transInfo.srcStation;
-    var destStation = transInfo.destStation;
-    var srcCity = transInfo.srcCity;
-    var destCity = transInfo.destCity;
-
-    queryByCity(srcCity, destCity, function(collection){
-        var resCollection = collection;
-
-        if(srcStation && destStation)
-        {
-            resCollection = filterByStation(srcStation, destStation, collection);
-        }
-
-        cb(resCollection);
-    });
-
-    
+  var transCollection = queryEnginee(req.body, function(err, transCollection) {
+      if (err)
+        console.log("queryEnginee Failed: " + err);
+      else
+        res.send({
+          'success': true,
+          'info': transCollection
+        });
+  });
 }
 
 
-function queryByCity(srcCity, destCity, cb){
+function queryEnginee(transInfo, cb) {
+  console.log("Start Query...");
 
-    var func = function(err, infoTT){
-        if(err)
-        {
-            //应该不会到这儿
-        }
-        else
-        {
-            //首先比较城市是否相同
-            if(infoTT.srcCity == srcCity && infoTT.destCity == destCity)
-            {
-                //火火，直接返回
-                var collection = {"res":[]};//TODO
-                for(int i = 0; i < info.length; ++i)
-                {
-                   collection.push({"path":infoTT[i]});
-                }
+  var collection;
+  var srcStation = transInfo.srcStation;
+  var destStation = transInfo.destStation;
+  var srcCity = transInfo.srcCity;
+  var destCity = transInfo.destCity;
 
-                cb(collection);
-            }
-            if(infoTT.srcCity != srcCity && infoTT.destCity == destCity)
-            {
-                //汽火
-                
-            }
-            if(infoTT.srcCity == srcCity && infoTT.destCity != destCity)
-            {
-                //火汽
-            }
-            if(infoTT.srcCity != srcCity && infoTT.destCity != destCity)
-            {
-                //汽汽
-            }
-        }
-    };
+  var date = transInfo.date;
+  if (!date)
+  {
+    var myDate = new Date();
+    date = myDate.getFullYear() + "-" + myDate.getMonth() + "-" + myDate.getDate();
+  }
+  console.log(date);
 
-    queryTrain(srcCity, destCity, func);
+  queryByCity(srcCity, destCity, date, function(err, results) {
+    if(err)
+        console.log("queryByCity Failed: " + err);
+    debugger;
+    log.trace("results: " + results);
+    cb(err, results);
+  });
+
+
 }
 
 
-function filterByStation(srcStation, destStation, collection){
-    var srcInfo = srcStation;
-    var destInfo = destStation;
 
-    for(var iterSrc in srcInfo){
-       for(var iterDest in destInfo)
-       {
-           //火，火
-           if(srcInfo[iterSrc].type == T && destInfo[iterDest].type == T)
-           {
-               Train2Train(srcInfo[iterSrc].name, destInfo[iterDest].name, func};
-           }
-           //火，汽
-           if(srcInfo[iterSrc].type == T && destInfo[iterDest].type == C)
-           {
-               Train2Coach(srcInfo[iterSrc].name, destInfo[iterDest].name, func);
-           }
-           //汽, 火
-           if(srcInfo[iterSrc].type == C && destInfo[iterDest].type == T)
-           {
-               Coach2Train(srcInfo[iterSrc].name, destInfo[iterDest].name, func);
-           }
-           //汽, 汽
-           if(srcInfo[iterSrc].type == C && destInfo[iterDest].type == C)
-           {
-               Coach2Coach(srcInfo[iterSrc].name, destInfo[iterDest].name, func);
-           }
+function queryByCity(srcCity, destCity, date, cb2) {
+  console.log("Start queryByCity...");
 
-       }
+  var func = function(err, infoTT) {
+    if (err) {
+      console.log("queryTrain Failed: " + err);
+    } else {
+      var results = {};
+      var collections = [];
+      var TTCollections = infoTT.res;
+
+      for (var i = 0; i < TTCollections.length; ++i) {
+        var TTpathSet = TTCollections[i];
+        var cityLength = TTpathSet.city.length;
+
+        //火火，直接返回----------------------
+        if (srcCity == TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
+        var paths = [];
+        var pathSet = {};
+          console.log("TT...");
+          paths = Train2Train(TTpathSet);
+
+          pathSet.city = TTpathSet.city;
+          pathSet.path = paths;
+
+
+          collections.push(pathSet);
+        }
+
+
+        //火汽------------------------------
+        if (srcCity == TTpathSet.city[0] && destCity != TTpathSet.city[cityLength - 1]) {
+        var paths = [];
+        var pathSet = {};
+          console.log("TC...");
+          queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
+            if (err) {
+              console.log("queryCoach Failed: " + err);
+              return;
+            } else {
+              var CCColections = infoCC.res;
+              for (var j = 0; j < CCColections.length; ++j) {
+                var CCpathSet = CCColections[j];
+                var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
+                collections.push(pathSet);
+              }
+            }
+          });
+        }
+
+        //汽火-------------------------------
+        if (srcCity != TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
+        var paths = [];
+        var pathSet = {};
+          console.log("CT...");
+          queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
+            if (err) {
+              console.log("queryCoach Failed: " + err);
+              return;
+            } else {
+
+            console.log("queryCoach success");
+
+              var CCColections = infoCC.res;
+              for (var j = 0; j < CCColections.length; ++j) {
+                var CCpathSet = CCColections[j];
+                //debugger;
+                var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
+                collections.push(pathSet);
+              }
+            }
+          });
+        }
+        var t01, t02;
+        //汽火汽-------------------------------
+        if (srcCity != TTpathSet.city[0] && destCity != TTpathSet.city[cityLength - 1]) {
+        var paths = [];
+        var pathSet = {};
+          console.log("CTC...");
+          async.parallel({
+              srcInfoCC: function(cb) {
+                queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
+                  if (err)
+                    console.log("queryCoach Failed for srcInfoCC: " + err);
+                  else
+                  {
+                    console.log("queryCoach success");
+                     cb(null, infoCC);
+                  }
+                });
+              },
+              destInfoCC: function(cb) {
+                queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
+                  if (err)
+                    console.log("queryCoach Failed for destInfoCC: " + err);
+                  else
+                  {
+                    console.log("queryCoach success");
+                     cb(null, infoCC);
+                  }
+                });
+              }
+            },
+            function(err, asyncRes) {
+              if (err) {
+                console.log("async Failed: " + err);
+                return;
+              }
+              else
+              {
+              //汽车查询结果，只会有一组城市数据（pathSet）
+              var srcCCpathSet = asyncRes.srcInfoCC.res[0];
+              var destCCpathSet = asyncRes.destInfoCC.res[0];
+
+              var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
+
+              collections.push(pathSet);
+            }
+            }
+          );
+        }
+      }
+
+
+      console.log("queryByCity success...");
+      console.log("collections: " + collections);
+      results.res = collections;
+      cb2(null, results);
     }
-    //
+  };
+
+  queryTrain(srcCity, destCity, date, func);
+}
 
 
-    var func = function(collection){
-       cb(collection);
-    };
+function queryTrain(srcCity, destCity, date, cb) {
+  console.log("Start queryTrain...");
+  TrainDAO.query(srcCity, destCity, date, function(err, info) {
+    if (err) {
+      console.log("TrainDAO.query Failed: " + err);
+    }
+    console.log("queryTrain success");
+    cb(null, info);
+  });
+}
+
+
+function Train2Train(TTpathSet) {
+  console.log("Start Train2Train...");
+  var paths = [];
+
+  for (var j = 0; j < TTpathSet.path.length; ++j) {
+    var path = TTpathSet.path[j];
+    var detailPath = {};
+
+    detailPath.total_price = 0.0;
+    detailPath.total_time = minutesMinus(path[0].depart_time, path[path.length - 1].arrive_time);
+
+    for (var k = 0; k < path.length; ++k) {
+      detailPath.element = path[k];
+      //console.log(path[k].price_list);
+      detailPath.total_price += getLowestPrice(path[k].price_list);
+    }
+
+    paths.push(detailPath);
+  }
+  return paths;
 }
 
 
 
+function doCoach2Coach(TTpathSet, srcPathSet, destPathSet) {
 
+  //先汽火
+  var CTPathSet = assemblePoint(TTpathSet, srcPathSet, C); //这儿类型为C，表示第二个参数为主，第一个为辅
+  //再拼汽车
+  var pathSet = assemblePoint(CTPathSet, destPathSet, CT); //这儿类型为T，表示第一个参数为主，第二个为辅
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function Train2Train(srcName, destName, cb){
-   var func = function(infoTT){
-       var collection = {"res":[]};
-       for(int i = 0; i < info.length; ++i)
-       {
-           collection.push({"path":infoTT[i]});
-       }
-
-       cb(collection);
-   };
-
-   queryTrain(srcName, destName, func);
-
-}
-
-function Train2Coach(srcName, destName, cb){
-   int scale = 0;
-   //最多scale次数
-   int count = 1;
-   do
-   {
-       var func = function(destCollection){
-           if(destCollection == null)
-               continue;
-           else
-           {
-               for(var iter in destCollection)
-               {
-                   var pair = destCollection[iter];
-
-                   var funcTT = function(infoTT){
-                       for(var iterCo in pair.coach)
-                       {
-                           queryCoach(pair.coach[iterCo].name, destName, function(infoCC){
-                               var path = assemblePoint(infoTT, infoCC, T);//失败的话 怎么办
-                               cb(path);
-                           });
-                       }
-                   };
-
-                   queryTrain(srcName, pair.train.name, funcTT);
-               }
-               break;
-           }
-       }
-
-       scale = scale + 100;
-       //先去location拿地址
-       queryScale(destName, scale, func);
-
-   }while(count--);
-}
-
-function Coach2Train(srcName, destName, cb){
-   int scale = 0;
-   //最多scale次数
-   int count = 3;
-   do
-   {
-       scale = scale + 100;
-       //先去location拿地址
-       var func = function(srcCollection) {
-           if(srcCollection == null)
-               continue;
-           else
-           {
-               for(var iter in srcCollection)
-               {
-                   var pair = srcCollection[iter];
-                   var infoTT = queryTrain(pair.train.name, destName, function(infoTT){
-                       for(var iterCo in pair.coach)
-                       {
-                           queryCoach(srcName, pair.coach[iterCo].name, function(infoCC){
-                               var path = assemblePoint(infoTT, infoCC, C);//失败的话 怎么办
-                               cb(path);
-                           });
-                       }
-                   });
-
-               }
-               break;
-           }
-       };
-
-       queryScale(srcName, scale, func);
-
-   }while(count--);
-}
-
-
-function doCoach2Coach(srcName, srcCollection, destName, destCollection, cb){
-
-   for(var iterSrc in srcCollection)
-   {
-       var pairSrc = srcCollection[iterSrc];
-       for(var iterDest in destCollection)
-       {
-           var pairDest = destCollection[iterDest];
-           //火火
-           queryTrain(pairSrc.name, pairDest.name, function(infoTT){
-               //src汽汽
-                   queryCoach(srcName, pairSrc.name, function(infoCCSrc){
-                       paths1 = assemblePoint(infoTT, infoCCSrc, C);//失败的话 怎么办
-                   });
-
-               //dest汽汽
-                   queryCoach(pairDest.name, destName, function(infoCCSrc){
-                       paths2 = assemblePoint(infoTT, infoCCSrc, T);//失败的话 怎么办
-                   });
-
-           });
-           //最后进行二级拼接
-           var collection = assemblePath(paths1, paths2);
-           cb(collection);
-       }
-   }
+  return pathSet;
 }
 
 
 
+//能进入该函数的，火汽城市必然相同，因为汽车查询函数只有成功才能进来
+function assemblePoint(TTpathSet, CCpathSet, headType) {
+  var pathSet = {};
+  var detailPath = [];
+  var paths = [];
 
-function Coach2Coach(srcName, destName, cb2){
-   int srcScale = 100, destScale = 100;
-   var srcCollection = null, destCollection = null;
-   int srcCount = 3, destCount = 3;
+  //火拼汽
+  if (headType == T) {
+    console.log("assemblePoint for TC");
+    debugger;
+    for (var i = 0; i < TTpathSet.path.length; ++i) {
+        var TTpath = TTpathSet.path[i];
+      for (var j = 0; j < CCpathSet.path.length; ++j) {
+        var CCpath = CCpathSet.path[j];
 
-   var paths1, paths2;
+        console.log("TTpath: " + TTpath);
+        var timeGap  = minutesMinus(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+
+        //中间需要间隔30mins
+        if (timeGap  > 30) {
+          //可以对接
+          var path = doAssemble(TTpath, CCpath, headType);
+          detailPath.total_price = 0.0;
+          detailPath.total_time = minutesMinus(path[0].depart_time, path[path.length - 1].arrive_time);
+          detailPath.element = path;
+
+          for (var k = 0; k < path.length; ++k) {
+            detailPath.total_price += getLowestPrice(path[k].price_list);
+          }
+          paths.push(detailPath);
+        }
+      }
+    }
+    pathSet.city = assembelCity(TTpathSet.city, CCpathSet.city, headType);
+  }
+
+  //汽＋火 拼 汽
+  if (headType == CT) {
+    var CTpathSet = TTpathSet;
+    console.log("assemblePoint for TC");
+    for (var i = 0; i < CTpathSet.path.length; ++i) {
+        var CTpath = CTpathSet.path[i].element;
+
+      for (var j = 0; j < CCpathSet.path.length; ++j) {
+        var CCpath = CCpathSet.path[j];
+
+        //console.log("CTpath: " + CTpath);
+        var timeGap  = minutesMinus(CTpath[CTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+
+        //中间需要间隔30mins
+        if (timeGap  > 30) {
+          //可以对接
+          var path = doAssemble(CTpath, CCpath, headType);
+
+          detailPath.total_price = 0.0;
+          detailPath.total_time = minutesMinus(path[0].depart_time, path[path.length - 1].arrive_time);
+          detailPath.element = path;
+
+          for (var k = 0; k < path.length; ++k) {
+            detailPath.total_price += getLowestPrice(path[k].price_list);
+          }
+          paths.push(detailPath);
+        }
+      }
+    }
+    console.log("CTpathSet.city: " + CTpathSet.city);
+    console.log("CCpathSet.city: " + CCpathSet.city);
+    pathSet.city = assembelCity(CTpathSet.city, CCpathSet.city, headType);
+    console.log("assembelCity finished: " + pathSet.city);
+  }
+
+  //汽拼火
+  if (headType == C) {
+    console.log("assemblePoint for CT");
+    for (var i = 0; i < CCpathSet.path.length; ++i) {
+        var CCpath = CCpathSet.path[i];
+      for (var j = 0; j < TTpathSet.path.length; ++j) {
+        var TTpath = TTpathSet.path[j];
+        var timeGap  = minutesMinus(CCpath[CCpath.length - 1].arrive_time, TTpath[0].depart_time); //一定要注意这儿的第二个下标取值
+
+        //中间需要间隔30mins
+          if (timeGap  > 30) {
+          //可以对接
+          var path = doAssemble(TTpath, CCpath, headType);
+          detailPath.total_price = 0.0;
+          detailPath.total_time = minutesMinus(path[0].depart_time, path[path.length - 1].arrive_time);
+          detailPath.element = path;
+
+          for (var k = 0; k < path.length; ++k) {
+            detailPath.total_price += getLowestPrice(path[k].price_list);
+          }
+          paths.push(detailPath);
+        }
+      }
+    }
+    console.log("TTpathSet.city: " + TTpathSet.city);
+    console.log("CCpathSet.city: " + CCpathSet.city);
+    pathSet.city = assembelCity(TTpathSet.city, CCpathSet.city, headType);
+  }
+  pathSet.path = paths;
+
+  return pathSet;
+}
 
 
-
-   async.parallel({
-       srcLocation: function(cb){
-           queryScale(srcName, scale, function(srcCollection){
-               if(srcCollection == null)
-                   console.log("queryScale null for srcCollection!");
-               cb(null, srcCollection);
-           });
-       },
-       destLocation: function(cb){
-           queryScale(destName, scale, function(destCollection){
-               if(destCollection == null)
-                   console.log("queryScale null for destCollection!");
-               cb(null, destCollection);
-           });
-       }
-   },
-   function(err, results){
-       if(err == null)
-       {
-           console.log("queryScale Error");
-           return;
-       }
-       var srcCollection = results.srcCollection;
-       var destCollection = results.destCollection;
-
-       doCoach2Coach(srcName, srcCollection, destName, destCollection, function(collection){
-           cb2(collection);
-       });
-
-   }
-   });
+function doAssemble(TTpath, CCpath, headType) {
+  var path = [];
+  if (headType == T || headType == CT) {
+    for (var i = 0; i < TTpath.length; ++i)
+      path.push(TTpath[i]);
+    for (var i = 0; i < CCpath.length; ++i)
+      path.push(CCpath[i]);
+  } else {
+    for (var i = 0; i < CCpath.length; ++i)
+      path.push(CCpath[i]);
+    for (var i = 0; i < TTpath.length; ++i)
+      path.push(TTpath[i]);
+  }
+  return path;
+}
 
 
-
+function assembelCity(TTCity, CCCity, headType) {
+  console.log("assembelCity for: " + headType);
+  if (headType == T || headType == CT) {
+    for (var i = 0; i < CCCity.length; ++i) {
+      TTCity.push(CCCity[i])
+    }
+    return TTCity;
+  } else {
+    for (var i = 0; i < TTCity.length; ++i) {
+      CCCity.push(TTCity[i])
+    }
+    return CCCity;
+  }
 
 }
 
 
-
-function queryTrain(srcName, destName, cb){
-   TrainDao.query(srcName, destName, function(err, info){
-       if(err)
-       {
-           console.log("TrainDao.query Failed: " + err);
-       }
-       cb(info);
-   }); 
-}
-
-function queryCoach(srcName, destName, cb){
-   CoachDao.query(srcName, destName, function(err, info){
-       if(err)
-       {
-           console.log("TrainDao.query Failed: " + err);
-       }
-       cb(info);
-   }); 
-}
-
-function queryScale(name, scale, cb){
-   LocationDAO.collectStationByScale(name, scale, function(err, collection){
-       if(err)
-       {
-           console.log("quertStationByScale error: " + err);
-       }
-       cb(err, collection);
-   });
-}
-
-function assemblePoint(infoTT, infoCC, headType){
-   var pathCount = 0;
-   var res = {"res":[]};
-   //火拼汽
-   if(headType == T)
-   {
-       for(var iterT in infoTT)
-       {
-           for(var iterC in infoCC)
-           {
-               var destTime = parseTime(infoTT[iterT].res.timeDest);
-               var srcTime = parseTime(infoCC[iterC].res.timeSrc);
-
-               //中间需要间隔60mins
-               if(destTime.setMinutes(60) < srcTime)
-               {
-                   //可以对接
-                   var path = doAssemble(infoTT[iterT].res, infoCC[iterC].res, headType);
-                   pathCount++;
-                   res[pathCount] = path;
-               }
-           }
-       }
-   }
-   //汽拼火
-   if(headType = C)
-   {
-       for(var iterC in infoCC)
-       {
-           for(var iterT in infoTT)
-           {
-               var destTime = parseTime(infoCC[iterC].res.timeDest);
-               var srcTime = parseTime(infoTT[iterT].res.timeSrc);
-
-               //中间需要间隔60mins
-               if(destTime.setMinutes(60) < srcTime)
-               {
-                   //可以对接
-                   var path = doAssemble(infoTT[iterT].res, infoCC[iterC].res, headType);
-                   pathCount++;
-                   res[pathCount] = path;
-               }
-           }
-       }
-   }
-
-   return res;
-}
-
-
-function parseTime(timeStr){
-   var dateStr = Date().toDateString();
-   return Date(dateStr + timeStr);
-}
-
-function doAssemble(trans1, trans2, headType){ 
-   var type1, type2;
-   if(headType = T)
-   {
-       type1 = T;
-       type2 = C;
-   }
-   else
-   {
-       type1 = C;
-       type2 = T;
-   }
-
-   var ret = {"path":[ +
-       {"type":type1,'name':trans1.name, "stationSrc":trans1.stationSrc, "stationDest":trans1.stationDest, 'timeSrc':trans1.timeSrc, 'timeDest':trans1.timeDest, 'cost':trans1.cost}, +
-       {"type":type2,'name':trans2.name, "stationSrc":trans2.stationSrc, "stationDest":trans2.stationDest, 'timeSrc':trans2.timeSrc, 'timeDest':trans2.timeDest, 'cost':trans2.cost} +
-   ]};
-   return ret;
-}
-
-function assemblePath(paths1, paths2){
-   var joint = {"res":[]};
-   int jointCount = 0;
-
-   for(int i = 0; i < paths1.res.length; ++i)
-   {
-       for(int j = 0; j < paths1.res.length; ++j)
-       {
-           if(paths1.res[i].path[2].name == paths2.res[j].path[1].name)
-           {
-               //可以拼接,直接在paths1的path元素的最后push入paths2的最后一条
-               var path = paths1Tmp.res[i].path;
-               path.push(paths2.res[i].path[2]);
-               joint[jointCount].push(path);
-               jointCount++;
-           }
-       }
-   }
-
-   return joint;
-}
-
-
-
-//Coach>>>>>>>>>>>>>query ??????//同一车次每隔半小时一班
+function getLowestPrice(price_list)
 {
-"res":
-   [
-       {"name":"1234-1", "stationSrc":"A", "stationDest":"B", "timeSrc":"08:00:00", "timeDest":"15:00:00", "cost":"60"},
-       {"name":"1234-2", "stationSrc":"A", "stationDest":"B", "timeSrc":"09:00:00", "timeDest":"16:00:00", "cost":"60"},
-       {"name":"1234-3", "stationSrc":"A", "stationDest":"B", "timeSrc":"10:00:00", "timeDest":"17:00:00", "cost":"60"}
-   ]
+    var lowest = parseFloat(price_list[0].price);
+    for(var i = 0; i < price_list.length; ++i)
+    {
+        if(lowest > parseFloat(price_list[i].price))
+        {
+            lowest = parseFloat(price_list[i].price);
+        }
+    }
+
+    return lowest;
 }
 
-//query>>>>>>>>>>>>>>client step 2
-{
-"res":
-   [
-   {
-       "point":['A','B','C'],
-       "path":
-       [
-           [
-               {"type":"coach", "name":"c1234", "timeSrc":"08:00:00","timeDest":"10:00:00","cost":"60"},
-               {"type":"train", "name":"D5240", "timeSrc":"10:40:00","timeDest":"13:40:00","cost":"150"}
-           ],
-           [
-               {"type":"coach", "name":"c1235", "timeSrc":"09:00:00","timeDest":"11:00:00","cost":"60"},
-               {"type":"train", "name":"D5241", "timeSrc":"12:00:00","timeDest":"15:20:00","cost":"150"}
-           ]
-       ]
-   },
-   {  
 
-       "point":['A','F','C'],
-       "path":
-       [
-           [
-               {"type":"coach", "name":"c1234","timeSrc":"08:00:00","timeDest":"10:00:00","cost":"60"},
-               {"type":"train", "name":"D5240", "timeSrc":"10:40:00","timeDest":"13:40:00","cost":"150"}
-           ],
-           [
-               {"type":"coach", "name":"c1235", "timeSrc":"09:00:00","timeDest":"11:00:00","cost":"60"},
-               {"type":"train", "name":"D5241", "timeSrc":"12:00:00","timeDest":"15:20:00","cost":"150"}
-           ]
-       ]
-   }
-   ]
+function queryCityByStation(stationName, cb) {
+  LocationDAO.queryCityByStation(stationName, function(err, cityName) {
+    cb(err, cityName);
+  });
 }
+
+
+function collectTrain2Train(info) {
+  //等待火车json拼接
+}
+
+
+//返回分钟数给孟B
+function minutesMinus(early_time, later_time) {
+  var minusDay = parseInt(later_time.substring(0, 1)) - parseInt(early_time.substring(0, 1));
+
+  var early = early_time.substring(1).split(":");
+  var later = later_time.substring(1).split(":");
+
+  return (minusDay * 24 * 60 + parseFloat(later[0]) - parseFloat(early[0])) * 60.0 + (parseFloat(later[1]) - parseFloat(early[1]));
+
+}
+
+
+function queryCoach(srcName, destName, date, cb) {
+  CoachDAO.query(srcName, destName, date, function(err, info) {
+    cb(err, info);
+  });
+}
+
+
+function parseTime(timeStr) {
+  var dateStr = Date().toDateString();
+  return Date(dateStr + timeStr);
+}
+
+
+exports.queryEnginee = queryEnginee;
 
 
 

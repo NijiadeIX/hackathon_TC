@@ -37,12 +37,8 @@ function _getTime(cityA, cityB, callback) {
 	};
 
 	var url = URL.format(urlObject);
-	log.trace(url);
 
 	var handler = function(err, statusCode, data) {
-		log.trace(statusCode);
-		log.trace(data);
-
 		var time = 0;
 
 		if (err) {
@@ -51,20 +47,140 @@ function _getTime(cityA, cityB, callback) {
 			return;
 		}
 
-		if (statusCode == 200) {
-			if (data.result && 
-				data.result.elements && 
-				data.result.elements.duration && 
-				data.result.elements.duration.value) {
+		if (statusCode == 200 && 
+			data &&
+			data.result && 
+			data.result.elements && 
+			data.result.elements.length > 0 &&
+			data.result.elements[0].duration && 
+			data.result.elements[0].duration.value
+			) {
 
-				time = data.result.elements.duration.value;
-			}
+			time = data.result.elements[0].duration.value;
 		}
 
 		callback(time);
 	};
 
 	http.get(url, handler);
+}
+
+/*
+from:
+	{
+		"time":"...", 
+		"data":[
+			{
+				"bus_number":"...",
+				"bus_type":"...",
+				"from_city_name":"...",
+				"from_station_name":"...",
+				"to_city_name":"...",
+				"to_station_name":"...",
+				"start_time":"...",
+				"price":123
+			}
+		]
+	}
+
+to:
+	{
+		"res":[
+			{
+				"city":[A, B],
+				"path":[
+					[
+						{
+							"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"},
+						}
+					],
+					[
+						{}
+					]
+				]
+			}
+		]
+	}
+
+
+ */
+function _parseCoachData(originData, fromCity, toCity) {
+	var destData = {};
+	//数据格式不对，直接返回null
+	if (!originData || !originData.time || !originData.data || originData.data.length == 0) {
+		return null;
+	}
+
+	destData.res = [];
+
+	var pathInfo = {};
+	pathInfo.city = [];
+	pathInfo.path = [];
+
+	var time;
+	time = originData.time;	
+
+	pathInfo.city.push(fromCity);
+	pathInfo.city.push(toCity);
+
+	var dataList = originData.data;
+	for(idx in dataList) {
+		var element = {};
+		element.type = 'coach';
+		element.name = dataList[idx].bus_number;
+		element.from_station = dataList[idx].from_station_name;
+		element.to_station = dataList[idx].to_station_name;
+		element.price = dataList[idx].full_price << 0;
+
+		var timeObject = _parseTime(dataList[idx].from_time, time);
+		element.depart_time = timeObject.departTime;
+		element.arrive_time = timeObject.arriveTime;
+
+		pathInfo.path.push(element);
+	}
+
+	destData.res.push(pathInfo);
+
+	return destData;
+}
+
+// fromTime '01:11' duration '55'
+// '002:16'
+function _parseTime(beginTime, duration) {
+	var retData = {};
+	var hourInt, minuteInt, durationInt;
+	var departTime, arriveTime;
+	var dayCount = 0;
+	var cells = beginTime.split(':');
+
+	departTime = '0' + beginTime;
+
+	hourInt = parseInt(cells[0]);
+	minuteInt = parseInt(cells[1]);
+	durationInt = parseInt(duration);
+
+	minuteInt += durationInt / 60 << 0;
+	hourInt += (minuteInt / 60) << 0;
+	dayCount += (hourInt / 24) << 0;
+
+	hourInt %= 24;
+	minuteInt %= 60;
+
+	arriveTime = dayCount.toString();
+
+	if (hourInt < 10) 
+		arriveTime = arriveTime + '0' + hourInt;
+	else
+		arriveTime = arriveTime + hourInt;
+
+	arriveTime += ':';
+
+	if (minuteInt < 10) 
+		arriveTime = arriveTime + '0' + minuteInt;
+	else
+		arriveTime = arriveTime + minuteInt;
+
+	return {"departTime" : departTime, "arriveTime" : arriveTime};
 }
 
 /**
@@ -81,19 +197,17 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 		protocol : 'http:',
 		host : ctripInterface.host,
 		pathname : ctripInterface.stationToStationPathName,
-		param : '/bus/busList',
-		from : cityA,
-		to : cityB,
-		date : startDate
+		query : {
+			param : '/bus/busList',
+			from : cityA,
+			to : cityB,
+			date : startDate
+		}
 	};
 
 	var url = URL.format(urlObject);
-	log.trace(url);
 
 	var handler = function(err, statusCode, data) {
-		log.trace(statusCode);
-		log.trace(data);
-
 		var retData = null;
 
 		if (err) {
@@ -102,8 +216,7 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 			return;
 		}
 
-		if (statusCode == 200) {
-			//整理数据
+		if (statusCode == 200 && data) {
 			retData = data;
 		}
 
@@ -123,13 +236,19 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
  * @param  {Function} callback  [description]
  */
 function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
+	var prettyCityA, prettyCityB;
+	prettyCityA = cityA.substring(0, cityA.length - 1);
+	prettyCityB = cityB.substring(0, cityB.length - 1);
+
 	var getCoachInfoTask = function(callback_1) {
-		_getCoachPath(stationA, cityA, stationB, cityB, startDate, function(data) {
+		//获取没有耗时的线路信息
+		_getCoachPath(stationA, prettyCityA, stationB, prettyCityB, startDate, function(data) {
 			callback_1(null, data);
 		});
 	};
 
 	var getTimeTask = function(callback_1){
+		//获取从这个城市A到城市B话费的时间
     	_getTime(cityA, cityB, function(time) {
     		callback_1(null, time);
     	});
@@ -147,12 +266,14 @@ function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 	 		return;
 	 	}
 
-	 	log.trace(results);
-
+	 	//给线路信息加上耗时
 	 	var time = results.time;
 	 	var coachInfo = results.coachInfo;
-	 	coachInfo.time = time;
-	 	callback(coachInfo);   	
+	 	coachInfo.time = time;	
+
+	 	//解析成翔B需要的格式
+	 	var retData = _parseCoachData(coachInfo, cityA, cityB);
+	 	callback(retData);   	
 	};
 
     //并行执行任务

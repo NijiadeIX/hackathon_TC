@@ -1,1 +1,88 @@
-kD5pgcIZt0o5izHgB81mZ6uU
+	kD5pgcIZt0o5izHgB81mZ6uU
+
+http://api.map.baidu.com/place/v2/suggestion?q=罗城&region=罗城&output=json&ak=kD5pgcIZt0o5izHgB81mZ6uU
+
+"lat":24.783074,
+"lng":108.911225
+
+
+"lat":31.887697,
+"lng":117.469275
+
+http://api.map.baidu.com/place/v2/search?ak=kD5pgcIZt0o5izHgB81mZ6uU&output=json&query=%E7%81%AB%E8%BD%A6%E7%AB%99&page_size=20&page_num=2&scope=1&location=31.887,117.469&radius=20000
+
+http://api.map.baidu.com/place/v2/search?ak=kD5pgcIZt0o5izHgB81mZ6uU&output=json&query=%E7%81%AB%E8%BD%A6%E7%AB%99&page_size=20&page_num=0&scope=2&region=%E6%A1%82%E6%9E%97%E5%B8%82
+
+"lat":25.26789,
+"lng":110.290219
+
+
+ http://apis.baidu.com/apistore/location/near?keyWord=火车站&location=24.783074,108.911225&radius=300000&output=json -H 'apikey:c3c4c2745abf456a165de32ae309ed50'
+
+ var a = require('./api/city.js');
+
+
+ var a = require('./api/mongo.js');
+ a.connect(function(err, db) {
+ 	db.collection('test').insertOne({'asdfadsf':12344}, function(err, result) {db.close();});
+ });
+
+ $$$$12032866.000000,2820782.000000$$柳州市$$0$$$$&en=1$$$$13523376.000000,3641154.000000$$上海市
+ $$$$$$安阳市$$0$$$$&en=2$$$$$$北京市$$0$$$$&sc=1&ec=1&pn=0&rn=5&exp
+
+  [truncated]GET /?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bse&c=1&t=0&poiType=0&isSingle=true&ptx=13523376.000000&pty=3641154.000000&wd=%E5%8D%97%E5%AE%81%E5%B8%82&name=%E4%B8%8A%E6%B5%B7%E5%B8%82&en=1$$$$13
+
+/?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bse&c=1&t=0&poiType=0&isSingle=true&ptx=13523376.000000&pty=3641154.000000&wd=%E5%8D%97%E5%AE%81%E5%B8%82&name=%E4%B8%8A%E6%B5%B7%E5%B8%82&en=1$$$$13
+
+/?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bse&c=1&t=0&poiType=0&isSingle=true&ptx=13523376.000000&pty=3641154.000000&wd=%E6%B2%B3%E6%B1%A0%E5%B8%82&name=%E4%B8%8A
+
+/?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bse&c=1&t=0&poiType=0&isSingle=true&ptx=13523376.000000&pty=3641154.000000&wd=%E5%AE%89%E9%98%B3%E5%B8%82&name=%E4%B8%8A
+
+/?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bt&c=1&sn=2$$$$$$%E5%AE%89%E9%98%B3%E5%B8%82$$0$$$$&en=2$$$$$$%E5%8C%97%E4%BA%AC%E5%B8%82$$0$$$$&sc=1&ec=1&pn=0&rn=5&exp
+
+/?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=direct&pcevaname=pc3&qt=bt&c=1&sn=2$$$$$$%E5%AE%89%E9%98%B3%E5%B8%82$$0$$$$&en=2$$$$$$%E5%8C%97%E4%BA%AC%E5%B8%82$$0$$$$&sc=1&ec=1&pn=0&rn=5&exptype=dep&exptime=2015-07-31%2
+
+ /?newmap=1&reqflag=pcmap&biz=1&from=webmap&da_par=baidu&pcevaname=pc3&qt=bt&c=1&sn=2$$$$$$%E6%9F%B3%E5%B7%9E%E5%B8%82$$0$$$$&en=2$$$$$$%E4%B8%8A%E6%B5%B7%E5%B8%82$$0$$$$&sc=1&ec=1&pn=0&rn=5&expt
+
+{
+"res":
+   [
+       {"name":"1234-1", "from_station":"A1", "to_station":"B1", "date":"2015/08/01" "time":"08:00:00", "use_minutes":"60", "cost":"60"},
+       {"name":"1234-2", "from_station":"A1", "to_station":"B1", "date":"2015/08/01" "time":"08:00:00", "use_minutes":"60", "cost":"60"},
+       {"name":"1234-3", "from_station":"A2", "to_station":"B1", "date":"2015/08/01" "time":"08:00:00","use_minutes":"60", "cost":"60"}
+   ]
+}
+
+
+火车接口：
+{
+	"res":[
+		{
+			"city":[A,B,C],
+			"path":[
+				[
+			        {"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"},
+			        {"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"}
+				],
+				[
+			        {"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"},
+			        {"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"}
+				]
+			]
+		},
+		{
+			"city":[A,C],
+			"path":[
+				[
+			        {"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"}
+				],
+				[
+			        {"name":"1234-1", "from_station":"A1", "to_station":"B1", "depart_time":"008:00", "arrive_time":"009:00", "price":"60"}
+				]				
+			]		
+		}
+	]
+}
+
+
+type = 1//火车
