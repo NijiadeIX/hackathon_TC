@@ -130,7 +130,8 @@ function _parseCoachData(originData, fromCity, toCity) {
 		element.name = dataList[idx].bus_number;
 		element.from_station = dataList[idx].from_station_name;
 		element.to_station = dataList[idx].to_station_name;
-		element.price = dataList[idx].full_price << 0;
+		element.price_list = [];
+		element.price_list.push({price_type : 'coach', price : dataList[idx].full_price << 0});;
 
 		var timeObject = _parseTime(dataList[idx].from_time, time);
 		element.depart_time = timeObject.departTime;
