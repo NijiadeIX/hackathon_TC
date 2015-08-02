@@ -1,7 +1,7 @@
 var async = require('async');
 var log = require('./log.js')("debug");
-var TrainDAO = require('./trainTest.js');
-var CoachDAO = require('./coachTest.js');
+var TrainDAO = require('./train.js');
+var CoachDAO = require('./coach.js');
 var T = "train";
 var C = "coach";
 var CT = "coachtrain";
@@ -187,7 +187,7 @@ function queryByCity(srcCity, destCity, date, cb2) {
 
 function queryTrain(srcCity, destCity, date, cb) {
   console.log("Start queryTrain...");
-  TrainDAO.query(srcCity, destCity, date, function(err, info) {
+  TrainDAO.getTrainPath(null, srcCity, null, destCity, date, function(err, info) {
     if (err) {
       console.log("TrainDAO.query Failed: " + err);
     }
@@ -412,7 +412,7 @@ function minutesMinus(early_time, later_time) {
 
 
 function queryCoach(srcName, destName, date, cb) {
-  CoachDAO.query(srcName, destName, date, function(err, info) {
+  CoachDAO.getCoachPath(null, srcName, null, destName, date, function(err, info) {
     cb(err, info);
   });
 }
