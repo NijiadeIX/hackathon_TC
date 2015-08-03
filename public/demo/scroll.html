@@ -1,0 +1,63 @@
+<div ui-content-for="title">
+  <span>内部特价</span>
+</div>
+
+<div class="scrollable" ui-state="searchBar" ng-hide="scroll_show">
+  <div class="scrollable-content" ui-scroll-bottom='bottomReached()' id="ScrollTop">
+	<a class="list-group-item media" ng-click="ClickOn(item._id)" ng-repeat="item in special_offer_list">
+              <div class="pull-left">
+                  <i class="fa fa-car chat-user-avatar"></i>
+              </div>
+              <div class="media-body">
+                  <h5 class="media-heading">{{item.name}}</h5>
+                  <small ng-switch on="user.online">
+                      <span ng-switch-default>
+						  <span class="label label-success">{{item.start_city}}
+                          </span>
+						  &nbsp &nbsp 
+						  <span class="label label-info">{{item.start_time}}
+                          </span>
+						  &nbsp &nbsp 
+						  <span class="label label-success">￥{{item.price}}
+                          </span>
+                      </span>
+                  </small>
+              </div>
+          </a>
+	<a class="list-group-item media" ng-click="showMore()">
+		<div class="media-body">
+			<h4 class="media-heading">showMore</h4>
+		</div>
+	</a>
+  </div>
+</div>
+
+<div class="scrollable" ng-show="scroll_show">
+  <div class="scrollable-content">
+    <div class='section'>
+      <ui-state id='activeTab' default='1'></ui-state>
+
+      <ul class="nav nav-tabs">
+        <li ui-class="{'active': activeTab == 1}">
+          <a ui-set="{'activeTab': 1}" id="a_first">简介</a>
+        </li>
+        <li ui-class="{'active': activeTab == 2}">
+          <a ui-set="{'activeTab': 2}">详情</a>
+        </li>
+      </ul>
+
+      <div ui-if="activeTab == 1" class="iframe-show" scrolling=yes>
+        <h3 class="page-header">{{special_offer_detail.name}}</h3>
+		<pre class="">
+        <p>{{special_offer_detail.content}}</p>
+		</pre>
+      </div>
+
+      <div ui-if="activeTab == 2" class="iframe-show">
+		<iframe ng-src="{{special_offer_detail.jumpurl}}" frameBorder=0 scrolling=yes width="100%" height="100%"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+

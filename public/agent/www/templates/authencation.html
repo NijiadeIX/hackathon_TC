@@ -1,0 +1,32 @@
+<ion-view view-title="Browse" cache-view="false">
+<ion-content>
+<h1 class="page-header">坐席管理</h1>
+<div class="table-responsive">
+	<div class="row">
+		<div class="col-33 padding-left">
+
+			<div id="center">
+
+			</div>
+
+			<form class="navbar-form navbar-left" ng-submit="DoRouteAdd()">
+				<div class="form-group">
+					<input type="text" placeholder="" class="form-control" ng-model="RouteData.RoutePoint">
+				</div>
+				<button type="submit" class="btn btn-success" ng-click="show()">s</button>
+			</form>
+		</div>
+
+		<div class="col-66">
+	  
+			<iframe id="mainContent" ng-src="/agent/www/templates/map.html" style="width:100%;height:300px" security="restricted" sandbox="allow-same-origin allow-scripts"></iframe>
+			<iframe id="mainContent" ng-src="/agent/www/templates/sip.html" style="width:100%;height:300px" security="restricted" sandbox="allow-same-origin allow-scripts"></iframe>
+
+		</div>
+	</div>
+
+</div>
+</ion-content>
+</ion-view>
+
+

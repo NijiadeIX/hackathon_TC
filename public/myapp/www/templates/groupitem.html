@@ -1,0 +1,68 @@
+<ion-view title="detail">
+  <ion-content scroll="true" overflow-scroll="true" class="has-header iframe-issue">
+
+   </ion-content>
+  <ion-tabs class="tabs-striped">
+		<ion-tab title="说走">
+			<header class="bar bar-header ">
+				<h1 class="page-header">Route</h1>
+			</header>
+			<ion-content has-header="true">
+				<div class="list card">
+					<div class="item item-avatar">
+						<img src="{{data.pic}}">
+						<label class="">
+							<input type="search" ng-model="data.name">
+						</label>
+						<p>{{data.mytime}}</p>
+						<button class="button button-positive" ng-click="tui()">
+							推广
+						</button>
+					</div>
+					<div class="item item-body">
+
+						<div class="list">
+							<a class="item item-thumbnail-left" href="#/app/playlists/{{item._id}}" ng-repeat="item in data.items">
+								<img src="{{item.crawl.pricture[0]}}" wight="80px" height="70px">
+
+								<h2>{{item.name}}</h2>
+
+								<p>
+								{{item.start_city}}
+								&nbsp  
+								{{item.start_time}}
+								&nbsp  
+								{{item.offsale}}
+								&nbsp  
+								{{item.quota}}
+								</p>
+								<p>￥{{item.price}}</p>
+
+							</a>    
+						</div>
+						<div class="item tabs tabs-secondary tabs-icon-left">
+							<div class="bar bar-header item-input-inset">
+								<label class="item-input-wrapper">
+									<i class="icon ion-ios-heart-outline placeholder-icon">￥{{data.price}}</i>
+								</label>
+								<button class="button button-positive" ng-click="publish()">
+									购买
+								</button>
+
+								
+							</div>
+							
+						</div>
+					</div>
+				</div>
+			</ion-content>
+		</ion-tab>
+	  
+		<ion-tab title="就走">
+
+			<iframe id="mainContent" ng-src="/myapp/www/templates/map.html" style="width:100%;height:100%" security="restricted" sandbox="allow-same-origin allow-scripts"></iframe>
+			
+		</ion-tab>
+  </ion-tabs>
+</ion-view>
+

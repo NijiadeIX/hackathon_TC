@@ -1,0 +1,77 @@
+/* Empty. Add your own CSS if you like */
+.iframe-issue {
+	-webkit-overflow-scrolling: touch !important;
+	overflow: scroll !important;
+	width: 100%;
+	height: 100%;
+}
+
+.chat-ui {
+	-webkit-overflow-scrolling: touch !important;
+	overflow: scroll !important;
+	background: #F0F3F8;
+}
+
+.send {
+	position:relative;
+	width:150px;
+	height:35px;
+	background:#F8C301;
+	border-radius:5px; /* 圆角 */
+	margin:30px auto 0;
+}
+
+.send.arrow {
+	position:absolute;
+	top:5px;
+	right:-16px; /* 圆角的位置需要细心调试哦 */
+	width:0;
+	height:0;
+	font-size:0;
+	border:solid 8px;
+	border-color:#4D4948 #4D4948 #4D4948 #F8C301;
+}
+
+p.thought{
+	position: relative;
+	width: 130px;
+	height: 100px;
+	text-align: center;
+	line-height: 100px;
+	background-color: #fff;
+	border: 8px solid #666;
+	-webkit-border-radius: 58px;
+	-moz-border-radius: 58px;
+	border-radius: 58px;
+	-webkit-box-shadow: 2px 2px 4px #888;
+	-moz-box-shadow: 2px 2px 4px #888;
+	box-shadow: 2px 2px 4px #888;
+}
+
+
+p.thought:before, p.thought:after{
+	content: '';
+	position: absolute;
+	left: 10px;
+	top: 70px;
+	width: 40px;
+	height: 40px;
+	background-color: #fff;
+	border: 8px solid #666;
+	-webkit-border-radius: 28px;
+	-moz-border-radius: 28px;
+	border-radius: 28px;
+	z-index:5;
+}
+
+p.thought:after{
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	left: 5px;
+	top: 100px;
+	-webkit-border-radius: 18px;
+	-moz-border-radius: 18px;
+	border-radius: 18px;
+	z-index:6;
+}

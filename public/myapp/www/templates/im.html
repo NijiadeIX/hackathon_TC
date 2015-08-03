@@ -1,0 +1,87 @@
+<ion-view view-title="im">
+  <ion-content>
+  </ion-content>
+	<ion-tabs class="tabs-striped  tabs-top">
+		<ion-tab title="附近群组">
+			<header class="bar bar-header ">
+				<h1 class="page-header">Route</h1>
+			</header>
+			<ion-content has-header="true">
+
+				<div class="list">
+					<a class="item item-thumbnail-left" href="#/app/im/{{item._id}}" ng-repeat="item in group_chat_list">
+						<!--
+						<img src="http://images4.c-ctrip.com/target/hotel/20000/19562/5e6f3da6768544a985dd76df348b14e6.jpg">
+						-->
+
+						<img src="{{item.crawl.pricture[0]}}" wight="80px" height="70px">
+
+						<h2>{{item.name}}</h2>
+
+					</a>
+				</div>
+			</ion-content>
+		</ion-tab>
+
+		<ion-tab title="附近客服">
+			<header class="bar bar-header ">
+				<h1 class="page-header">Route</h1>
+			</header>
+			<ion-content has-header="true">
+				<div class="list">
+					<a class="item item-thumbnail-left" href="#/app/im/{{item._id}}" ng-repeat="item in local_service_list">
+						<!--
+						<img src="http://images4.c-ctrip.com/target/hotel/20000/19562/5e6f3da6768544a985dd76df348b14e6.jpg">
+						-->
+
+						<img src="{{item.crawl.pricture[0]}}" wight="80px" height="70px">
+
+						<h2>{{item.name}}</h2>
+					</a>
+
+				</div>
+			</ion-content>
+		</ion-tab>
+
+		<ion-tab title="附近游记">
+			<header class="bar bar-header ">
+				<h1 class="page-header">Route</h1>
+			</header>
+			<ion-content has-header="true">
+				<div class="list">
+					<a class="item item-thumbnail-left" href="#/app/im/{{item._id}}" ng-repeat="item in local_people_list">
+						<!--
+						<img src="http://images4.c-ctrip.com/target/hotel/20000/19562/5e6f3da6768544a985dd76df348b14e6.jpg">
+						-->
+
+						<img src="{{item.crawl.pricture[0]}}" wight="80px" height="70px">
+
+						<h2>{{item.name}}</h2>
+					</a>
+
+				</div>
+			</ion-content>
+		</ion-tab>
+
+		<ion-tab title="我的关注">
+			<header class="bar bar-header ">
+				<h1 class="page-header">Route</h1>
+			</header>
+			<ion-content has-header="true">
+				<div class="list">
+					<a class="item item-thumbnail-left" href="#/app/im/{{item._id}}" ng-repeat="item in my_chat_list">
+						<!--
+						<img src="http://images4.c-ctrip.com/target/hotel/20000/19562/5e6f3da6768544a985dd76df348b14e6.jpg">
+						-->
+
+						<img src="{{item.crawl.pricture[0]}}" wight="80px" height="70px">
+
+						<h2>{{item.name}}</h2>
+						
+					</a>
+				</div>
+			</ion-content>
+		</ion-tab>
+		
+	</ion-tabs>
+</ion-view>

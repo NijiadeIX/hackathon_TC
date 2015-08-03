@@ -1,0 +1,22 @@
+<ion-view view-title="路线">
+  <div class="bar bar-header bar-positive">
+	    <h1 class="title">bar-positive</h1>
+	</div>
+
+  <ion-content>
+	  <div class="list">
+
+		  <a class="item item-button-right" href="#/app/map_detail/{{items.id}}" ng-repeat="items in map_list">
+				  <label  ng-repeat="item_city in items.name track by $index" class="">
+			  		<spin class="">
+					  {{item_city}}
+			  		</spin>
+					  <i class="icon ion-arrow-right-c" ng-hide='$index == (items.name.length - 1) || (1 == ($index % 2)) '></i>
+				  </label>
+					
+				  <span class="badge badge-positive">16</span>
+				  
+		  </a>
+	  </div>
+  </ion-content>
+</ion-view>

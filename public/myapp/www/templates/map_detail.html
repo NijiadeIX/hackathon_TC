@@ -1,0 +1,30 @@
+<ion-view title="路线详情">
+
+<div class="bar bar-subheader">
+	<h2 class="title"> {{citys}} </h2>
+	<a ng-click="" class="button button-icon icon ion-ios7-clock-outline"></a>
+	<a ng-click="" class="button button-icon icon ion-social-bitcoin-outline"></a>
+</div>
+  <ion-content scroll="true" overflow-scroll="true" class="has-header2 iframe-issue">
+  	<div class="list">
+		  <a class="item" ng-repeat="items in map_detail_list">
+		  	<div  ng-repeat="item in items.element">
+				<h2 ng-show='item.type == "coach"'>
+					<spin > <i class="icon ion-model-s"></i> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
+					<spin > <i class="icon ion-model-s"></i> 车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
+				</h2>
+				<h2 ng-show='item.type == "train"'>
+					<spin > <i class="icon ion-android-train" style="width:13px;height:3px"></i> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
+					<spin > <i class="icon ion-android-train"></i> 车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
+				</h2>
+			</div>
+			<p>
+			总时长 {{items.total_time}}
+		  	</p>
+		  </a>
+		  
+	  </div>
+
+   </ion-content>
+</ion-view>
+
