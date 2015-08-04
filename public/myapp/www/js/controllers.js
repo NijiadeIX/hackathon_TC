@@ -81,6 +81,8 @@ angular.module('starter.controllers', [])
 	$rootScope.map = {};
 
 	$rootScope.map.date_time = new Date();
+	$rootScope.map.start_city = "上海站";
+	$rootScope.map.end_city = "南京站";
 
 	$scope.map_list_get = function() {
 		if ($rootScope.map.start_city != null 

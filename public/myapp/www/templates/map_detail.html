@@ -3,20 +3,63 @@
 <div class="bar bar-subheader">
 	<h2 class="title"> {{citys}} </h2>
 	<a ng-click="" class="button button-icon icon ion-ios7-clock-outline"></a>
-	<a ng-click="" class="button button-icon icon ion-social-bitcoin-outline"></a>
 </div>
   <ion-content scroll="true" overflow-scroll="true" class="has-header2 iframe-issue">
   	<div class="list">
 		  <a class="item" ng-repeat="items in map_detail_list">
 		  	<div  ng-repeat="item in items.element">
+				<!--
 				<h2 ng-show='item.type == "coach"'>
-					<spin > <i class="icon ion-model-s"></i> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
-					<spin > <i class="icon ion-model-s"></i> 车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
+					<spin class="railway_time positive"><i class="icon ion-model-s"></i>  </spin> </br>
+					<spin class="railway_detail">出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
+					<spin>车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
 				</h2>
+
+				
 				<h2 ng-show='item.type == "train"'>
-					<spin > <i class="icon ion-android-train" style="width:13px;height:3px"></i> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
-					<spin > <i class="icon ion-android-train"></i> 车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
+					<spin class="railway_time positive"> <i class="icon ion-android-train"> </i> {{item.name}} </spin> </br>
+					<spin> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
+					<spin> 车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
 				</h2>
+				-->
+				<div ng-show='item.type == "coach"'>
+					<div class="row">
+						<div class="col col-33 railway_time">{{item.name}}</div>
+						<div class="col col-33 railway_time"><i class="icon ion-model-s"></i></div>
+						<div class="col col-20 col-offset-10"> ¥0 </div>
+					</div>
+					<div class="row">
+						<div class="col col-33 railway_time2 ">{{item.depart_time}}</div>
+						<div class="col col-33 railway_detail">出发站:{{item.from_station}}</div>
+						<div class="col col-20 col-offset-10"> 二等座</div>
+					</div>
+					<div class="row">
+						<div class="col col-33 railway_time2 ">{{item.arrive_time}}</div>
+						<div class="col col-33 railway_detail">终点站:{{item.to_station}}</div>
+						<div class="col col-20 col-offset-10"> 200张</div>
+					</div>
+				</div>
+
+
+				
+				<div ng-show='item.type == "train"'>
+					<div class="row">
+						<div class="col col-33 railway_time">{{item.name}}</div>
+						<div class="col col-33 railway_time"><i class="icon ion-android-train"></i></div>
+						<div class="col col-20 col-offset-10"> ¥0 </div>
+					</div>
+					<div class="row">
+						<div class="col col-33 railway_time2 ">{{item.depart_time}}</div>
+						<div class="col col-33 railway_detail">出发站:{{item.from_station}}</div>
+						<div class="col col-20 col-offset-10"> 二等座</div>
+					</div>
+					<div class="row">
+						<div class="col col-33 railway_time2 ">{{item.arrive_time}}</div>
+						<div class="col col-33 railway_detail">终点站:{{item.to_station}}</div>
+						<div class="col col-20 col-offset-10"> 200张</div>
+					</div>
+				</div>
+				
 			</div>
 			<p>
 			总时长 {{items.total_time}}
