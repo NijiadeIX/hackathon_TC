@@ -125,6 +125,7 @@ function _parseCoachData(originData, fromCity, toCity) {
 
 	var dataList = originData.data;
 	for(idx in dataList) {
+		var elements = [];
 		var element = {};
 		element.type = 'coach';
 		element.name = dataList[idx].bus_number;
@@ -137,7 +138,8 @@ function _parseCoachData(originData, fromCity, toCity) {
 		element.depart_time = timeObject.departTime;
 		element.arrive_time = timeObject.arriveTime;
 
-		pathInfo.path.push(element);
+		elements.push(element);
+		pathInfo.path.push(elements);
 	}
 
 	destData.res.push(pathInfo);
@@ -238,9 +240,11 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
  */
 function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 	var prettyCityA, prettyCityB;
-	prettyCityA = cityA.substring(0, cityA.length - 1);
-	prettyCityB = cityB.substring(0, cityB.length - 1);
-
+	//prettyCityA = cityA.substring(0, cityA.length - 1);
+	//prettyCityB = cityB.substring(0, cityB.length - 1);
+	prettyCityA = cityA.replace(/市|县/, '');
+	prettyCityB = cityB.replace(/市|县/, '');
+	debugger;
 	var getCoachInfoTask = function(callback_1) {
 		//获取没有耗时的线路信息
 		_getCoachPath(stationA, prettyCityA, stationB, prettyCityB, startDate, function(data) {
@@ -270,10 +274,12 @@ function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 	 	//给线路信息加上耗时
 	 	var time = results.time;
 	 	var coachInfo = results.coachInfo;
-	 	coachInfo.time = time;	
+	 	if (coachInfo)
+	 		coachInfo.time = time;	
 
 	 	//解析成翔B需要的格式
 	 	var retData = _parseCoachData(coachInfo, cityA, cityB);
+	 	debugger;
 	 	callback(retData);   	
 	};
 

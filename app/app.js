@@ -5,11 +5,14 @@ var log        = require('../api/log.js')('app.js');
 var router     = require('./routes/route.js');
 var jsonParser = bodyParser.json();
 var app        = express();
+var path 		= require('path');
 
 /**
  * used to start the server, optional parameter is port
  * @param  {number} port server will run on the port
  */
+
+
 function run(port) {
 	configure();
 
@@ -29,6 +32,9 @@ function run(port) {
 }
 
 function configure() {
+	console.log(__dirname);
+	var publicPath = path.resolve(__dirname, '../public');
+	app.use(express.static(publicPath));
 	app.use(jsonParser);
 	app.use(errHandler);
 	app.use(router);

@@ -2,12 +2,6 @@
 	"appenders" : [
 		{ 
 			"type" : "console"
-		},
-		{ 
-			"type" : "dateFile", 
-			"filename" : "logs/TC",
-			"pattern" : "_yyyy-MM-dd.log",
-			"alwaysIncludePattern" : true
 		}
 	],
 	"levels" : {
