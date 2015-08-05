@@ -90,13 +90,14 @@ p.thought:after{
 
 .railway_time3 {
 	font: bold 23px Tahoma;
-	color:rgb(0, 245, 255);
+	color:rgb(28, 134, 238);
 }
 
 
 .railway_time4 {
 	font: bold 23px Tahoma;
-	color:rgb(0, 255, 127);
+	color:rgb(238,0,0);
+	
 }
 
 .railway_detail {
