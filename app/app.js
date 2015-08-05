@@ -38,9 +38,9 @@ function configure() {
 	app.use(jsonParser);
 	app.use(errHandler);
 	app.use(router);
-	process.on('uncaughtException', function(err) {
-		log.error('uncaughtException');
-	});
+	// process.on('uncaughtException', function(err) {
+	// 	log.error('uncaughtException');
+	// });
 }
  
 function errHandler(err, req, res, next) {
