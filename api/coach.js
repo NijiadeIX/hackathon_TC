@@ -239,6 +239,7 @@ function _getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
  * @param  {Function} callback  [description]
  */
 function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
+	log.info('from station:' + stationA + ' from city:' + cityA + ' to station:' + stationB + ' to city:' + cityB + ' date:' + startDate);
 	var prettyCityA, prettyCityB;
 	//prettyCityA = cityA.substring(0, cityA.length - 1);
 	//prettyCityB = cityB.substring(0, cityB.length - 1);
@@ -279,7 +280,8 @@ function getCoachPath(stationA, cityA, stationB, cityB, startDate, callback) {
 
 	 	//解析成翔B需要的格式
 	 	var retData = _parseCoachData(coachInfo, cityA, cityB);
-	 	debugger;
+	 	log.info('coach data:');
+	 	log.info(retData);
 	 	callback(retData);   	
 	};
 

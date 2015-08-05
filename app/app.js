@@ -38,6 +38,9 @@ function configure() {
 	app.use(jsonParser);
 	app.use(errHandler);
 	app.use(router);
+	process.on('uncaughtException', function(err) {
+		log.error('uncaughtException');
+	});
 }
  
 function errHandler(err, req, res, next) {
@@ -46,8 +49,6 @@ function errHandler(err, req, res, next) {
 
 		var statusCode = err.status || 500;
 		var resBody    = (statusCode == 500? { message : "server error"} : { message : "something bad in your request" });
-		log.info('statudCode ' + statudCode);
-		log.info(resBody);
 		res.status(statudCode).json(resBody);
 	}
 } 

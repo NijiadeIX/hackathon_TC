@@ -482,10 +482,15 @@ function _getTrainPath(cityA, stationA, cityB, stationB, startDate, callback) {
  * 查询火车路线信息
  */
 function getTrainPath(stationA, cityA, stationB, cityB,  startDate, callback) {
+	log.info('from station:' + stationA + ' from city:' + cityA + ' to station:' + stationB + 'to city:' + cityB + ' date:' + startDate);
 	_getTrainPath(cityA, null, cityB, null, null, function(data) {
 		// addPrice(_parseTrainData(data), callback);
 		_parseTrainData(data, cityA, cityB, function(data_1) {
-			addPrice(data_1, callback);
+			addPrice(data_1, function(data) {
+				log.info('train data:');
+				log.info(data);
+				callback(data);
+			});
 		});
 	});
 }
