@@ -7,9 +7,11 @@ var T = "train";
 var C = "coach";
 var CT = "coachtrain";
 
-
+var total_query_count = 0;
 exports.queryTransport = function(req, res) {
   try{
+    total_query_count++;
+    console.log("TOTAL QUERY COUNT: " + total_query_count);
     var info = {};
     info.srcCity = req.query.StartCity;
     info.destCity = req.query.EndCity;
@@ -33,7 +35,7 @@ exports.queryTransport = function(req, res) {
   {
     log.error('\r\nError Message: ' + e);
     log.error('\r\nError Stack: ' + e.stack);
-    
+
     var result = {
           "res": []
         };
