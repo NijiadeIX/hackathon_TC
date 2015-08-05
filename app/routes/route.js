@@ -9,5 +9,7 @@ router.get('/test', function(req, res) {
 });
 
 router.get('/query', QueryDAO.queryTransport);
-
+router.get('/', function(req, res) {
+	res.redirect('/myapp/www/');
+});
 module.exports = router;
