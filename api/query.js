@@ -17,15 +17,15 @@ exports.queryTransport = function(req, res) {
   info.date = req.query.date;
   //debugger;
   var transCollection = queryEnginee(info, function(err, transCollection) {
-    if (err) {
+    if (transCollection == null) {
       console.log("queryEnginee Failed: " + err);
       var result = {
         "res": []
       };
       //res.send(result);
-    } else
-      debugger;
-    res.send(transCollection);
+    } else {
+     res.send(transCollection);
+    }
   });
 }
 
@@ -48,13 +48,13 @@ function queryEnginee(transInfo, cb) {
   console.log(date);
 
   queryByCity(srcCity, destCity, date, function(err, results) {
-    if (err) {
+    if (results == null) {
       console.log("queryByCity Failed: " + err);
-      cb(err, null);
+      cb(null, null);
     } else {
       //debugger;
-      log.trace("results: " + results);
-      cb(err, results);
+      console.log("queryByCity Success");
+      cb(null, results);
     }
   });
 
@@ -255,12 +255,11 @@ function queryByCity(srcCity, destCity, date, cb3) {
   var results = {};
 
   async.parallel({
-      collections1: function(cb2) {
+      collectionsTrain: function(cbCollecTrain) {
         queryTrain(srcCity, destCity, date, function(err, infoTT) {
-          debugger;
-          if (err) {
+          if (infoTT == null) {
             console.log("queryTrain Failed: " + err);
-            cb2(err, null);
+            cbCollecTrain(null, null);
           } else {
             console.log("queryTrain success");
             var results = {};
@@ -273,12 +272,10 @@ function queryByCity(srcCity, destCity, date, cb3) {
 
 
 
-              //火火，直接返回----------------------
-              //if (srcCity == TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
               var pattsrcCity = new RegExp(TTpathSet.city[0]);
               var pattdestCity = new RegExp(TTpathSet.city[cityLength - 1]);
-              //debugger;
-              //if (srcCity == TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
+
+              //火火，直接返回----------------------
               if (pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
                 var paths = [];
                 var pathSet = {};
@@ -290,19 +287,21 @@ function queryByCity(srcCity, destCity, date, cb3) {
 
 
                 collections.push(pathSet);
+                debugger;
+                console.log("TT collections: " + collections);
+                cbCollecTrain(null, collections);
               }
 
 
               //火汽------------------------------
-              //if (srcCity == TTpathSet.city[0] && destCity != TTpathSet.city[cityLength - 1]) {
               if (pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
                 var paths = [];
                 var pathSet = {};
                 console.log("TC...");
                 queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                  if (err) {
+                  if (infoCC == null) {
                     console.log("queryCoach Failed: " + err);
-                    //cb2(err, null);
+                    //cbCollecTrain(null, null);
                   } else {
                     console.log("queryCoach success: " + err);
                     var CCColections = infoCC.res;
@@ -311,22 +310,22 @@ function queryByCity(srcCity, destCity, date, cb3) {
                       var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
 
                       collections.push(pathSet);
-                debugger;
+                      console.log("TT collections: " + collections);
+                      cbCollecTrain(null, collections);
                     }
                   }
                 });
               }
 
               //汽火-------------------------------
-              //if (srcCity != TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
               if (!pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
                 var paths = [];
                 var pathSet = {};
                 console.log("CT...");
                 queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                  if (err) {
+                  if (infoCC == null) {
                     console.log("queryCoach Failed: " + err);
-                    //cb2(err, null);
+                    //cbCollecTrain(null, null);
                   } else {
 
                     console.log("queryCoach success");
@@ -337,13 +336,14 @@ function queryByCity(srcCity, destCity, date, cb3) {
                       //debugger;
                       var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
                       collections.push(pathSet);
+                      console.log("TT collections: " + collections);
+                      cbCollecTrain(null, collections);
                     }
                   }
                 });
               }
-              var t01, t02;
+
               //汽火汽-------------------------------
-              //if (srcCity != TTpathSet.city[0] && destCity != TTpathSet.city[cityLength - 1]) {
               if (!pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
                 var paths = [];
                 var pathSet = {};
@@ -351,7 +351,7 @@ function queryByCity(srcCity, destCity, date, cb3) {
                 async.parallel({
                     srcInfoCC: function(cb) {
                       queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                        if (err) {
+                        if (infoCC == null) {
                           console.log("queryCoach Failed for srcInfoCC in async1: " + err);
                           cb(null, null);
                         } else {
@@ -362,7 +362,7 @@ function queryByCity(srcCity, destCity, date, cb3) {
                     },
                     destInfoCC: function(cb) {
                       queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                        if (err) {
+                        if (infoCC == null) {
                           console.log("queryCoach Failed for destInfoCC in async2: " + err);
                           cb(null, null);
                         } else {
@@ -381,24 +381,22 @@ function queryByCity(srcCity, destCity, date, cb3) {
                       var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
 
                       collections.push(pathSet);
+                      console.log("TT collections: " + collections);
+                      cbCollecTrain(null, collections);
                     }
                   }
                 );
               }
             }
-
-            debugger;
-            console.log("TT collections: " + collections);
-            cb2(null, collections);
           }
         });
       },
-      collections2: function(cb2) {
+      collectionsCoach: function(cbCollecCoach) {
         queryCoach(srcCity, destCity, date, function(err, infoCC) {
           debugger;
-          if (err) {
+          if (infoCC == null) {
             console.log("queryCoach Failed in async2: " + err);
-            cb2(null, null);
+            cbCollecCoach(null, null);
           } else {
             console.log("queryCoach success");
 
@@ -442,7 +440,7 @@ function queryByCity(srcCity, destCity, date, cb3) {
             }
             console.log("CC collections: " + collections);
             debugger;
-            cb2(null, collections);
+            cbCollecCoach(null, collections);
           }
         });
       }
@@ -455,17 +453,17 @@ function queryByCity(srcCity, destCity, date, cb3) {
       //} else {
       console.log("asyncRes ENter...");
 
-      if (asyncRes.collections1 || asyncRes.collections2) {
+      if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
         console.log("queryByCity success...");
 
-        if (asyncRes.collections2 != null) {
-          for (var i = 0; i < asyncRes.collections2.length; ++i) {
-            //var collecs2 = asyncRes.collections2[i];
-            asyncRes.collections1.push(asyncRes.collections2[i]);
-            console.log("xxxx" + asyncRes.collections2[i]);
+        if (asyncRes.collectionsCoach != null) {
+          for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
+            //var collecs2 = asyncRes.collectionsCoach[i];
+            asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
+            console.log("xxxx" + asyncRes.collectionsCoach[i]);
           }
         }
-        results.res = asyncRes.collections1;
+        results.res = asyncRes.collectionsTrain;
         debugger;
         cb3(null, results);
       }
@@ -495,7 +493,7 @@ function queryTrain(srcCity, destCity, date, cb) {
   TrainDAO.getTrainPath(null, srcCity, null, destCity, date, function(info) {
     if (!info || !info.res) {
       console.log("TrainDAO.getTrainPath Failed");
-      cb("error", null);
+      cb(null, null);
     } else {
       //debugger;
       console.log("TrainDAO.getTrainPath success");
@@ -513,7 +511,7 @@ function queryCoach(srcName, destName, date, cb) {
     debugger;
     if (!info || !info.res) {
       console.log("CoachDAO.getCoachPath Failed");
-      cb("error", info);
+      cb(null, null);
     } else {
       console.log("CoachDAO.getCoachPath success");
       cb(null, info);
