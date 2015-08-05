@@ -262,7 +262,7 @@ angular.module('starter.services', [])
 					       ]
 				   },
 				   {
-				       "total_time":"60",
+				       "total_time":"50",
 				       "total_cost":"200",
 				       "element":
 					       [

@@ -1,0 +1,59 @@
+<ion-view view-title="路线">
+  <div class="bar bar-header bar-positive">
+	    <h1 class="title">bar-positive</h1>
+	</div>
+
+  <ion-content>
+	  <div class="list">
+
+		  <div class="list card">
+			  <div class="item item-avatar">
+				  <img src="img/shanghai.png">
+				  <h2>{{citys}}</h2>
+				  <p>总时长 {{map_detail.total_time}} 
+				  	 总价格 {{map_detail.total_price}}
+				  </p>
+			  </div>
+
+
+			  <div class="item item-body" ng-repeat="item in map_detail.element">
+					  <h2 ng-show='item.type == "coach"'>
+						  <spin > <i class="icon ion-model-s"></i> 车次:{{item.name}}</spin> </br>
+						  <spin > <i class="icon ion-model-s"></i> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
+						  <spin > <i class="icon ion-model-s"></i> 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
+					  </h2>
+					  <h2 ng-show='item.type == "train"'>
+						  <spin > <i class="icon ion-android-train"></i> 车次:{{item.name}} </spin> </br>
+						  <spin > <i class="icon ion-android-train"></i> 出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
+						  <spin > <i class="icon ion-android-train"></i> 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
+					  </h2>
+				  
+				 
+			  </div>
+			 
+			  <div class="item item-body">
+					  <img class="" src="img/car.png">
+					  易到用车推荐	 
+			  </div>
+
+
+			  <div class="item tabs tabs-secondary tabs-icon-left">
+				  <a class="tab-item" href="#">
+					  <i class="icon ion-thumbsup"></i>
+					  Buy 
+				  </a>
+				  <a class="tab-item" href="#">
+					  <i class="icon ion-chatbox"></i>
+					  Comment
+				  </a>
+				  <a class="tab-item" href="#">
+					  <i class="icon ion-share"></i>
+					  Share
+				  </a>
+			  </div>
+
+		  </div>  
+	  </div>
+
+  </ion-content>
+</ion-view>

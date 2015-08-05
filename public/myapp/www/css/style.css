@@ -75,23 +75,3 @@ p.thought:after{
 	border-radius: 18px;
 	z-index:6;
 }
-
-
-.railway_time {
-	color:#3F82C4;
-	font-size:20;
-	font: bold 20px Tahoma;
-	overflow:hidden;
-}
-
-.railway_time2 {
-	color:#E9322D;
-	font-size:20;
-	font: bold 15px Tahoma;
-}
-
-
-.railway_detail {
-	color:#000000;
-	font-family:"Times New Roman",Georgia,Serif;
-}

@@ -92,6 +92,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     }
   })
 
+  .state('app.map_show', {
+    url: "/map_show/:id",
+    views: {
+      'menuContent': {
+        templateUrl: "templates/map_show.html",
+        controller: 'map_show'
+      }
+    }
+  })
+
   .state('app.playlists', {
     url: "/playlists",
     views: {

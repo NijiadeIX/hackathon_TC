@@ -80,9 +80,9 @@ angular.module('starter.controllers', [])
 
 	$rootScope.map = {};
 
+	$rootScope.map.start_city = "上海市";
+	$rootScope.map.end_city = "南京市";
 	$rootScope.map.date_time = new Date();
-	$rootScope.map.start_city = "上海站";
-	$rootScope.map.end_city = "南京站";
 
 	$scope.map_list_get = function() {
 		if ($rootScope.map.start_city != null 
@@ -108,7 +108,7 @@ angular.module('starter.controllers', [])
 		var map_date = $rootScope.map.date_time;
 		var map_date_tmp = map_date.getFullYear() 
 	+ "-" + (map_date.getMonth() + 1 < 10 ? "0" + (map_date.getMonth() + 1) : map_date.getMonth())
-	+ "-" + map_date.getDate();
+	+ "-" + (map_date.getDate() < 10 ? "0" + (map_date.getDate()) : map_date.getDate());
 
 		console.log(map_date_tmp);
 
@@ -121,8 +121,30 @@ angular.module('starter.controllers', [])
 	
 	$scope.map_detail_list = MapService.GetMapDetail($stateParams.id);
 	$scope.citys = MapService.GetCityOne($stateParams.id);
+	$scope.index_id = $stateParams.id;
 	console.log("detail map list");
 	console.log($scope.map_detail_list);
+
+	var time_sort_fun = function(a, b) {
+		return a.total_time - b.total_time;
+	};
+
+	$scope.time_sort = function() {
+		console.log("time_sort");
+		$scope.map_detail_list.sort(time_sort_fun);
+	};
+})
+
+
+.controller('map_show', function($rootScope, $scope, $stateParams, $http, $sce, MapService) {
+
+	var par_list = $stateParams.id.split("_");
+
+	console.log(par_list);
+	
+	$scope.citys = MapService.GetCityOne(par_list[0]);
+	$scope.map_detail = MapService.GetMapDetail(par_list[0])[par_list[1]];
+
 })
 
 .controller('control_myitem', function($rootScope, $scope, $stateParams, $http, $sce, SpecialListService, s_im, s_item) {
