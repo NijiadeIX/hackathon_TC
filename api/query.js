@@ -53,11 +53,6 @@ function queryEnginee(transInfo, cb) {
   var destCity = transInfo.destCity;
 
   var date = transInfo.date;
-  /*if (!date) {
-    var myDate = new Date();
-    date = myDate.getFullYear() + "-" + myDate.getMonth() + "-" + myDate.getDate();
-  }
-  */
   console.log(date);
 
   queryByCity(srcCity, destCity, date, function(err, results) {
@@ -74,244 +69,35 @@ function queryEnginee(transInfo, cb) {
 
 }
 
+function assembleTrainCollection(asyncRes) {
+  var collections = [];
+  for (var i = 0; i < asyncRes.length; ++i) {
+    var pathSet = asyncRes[i];
+    collections.push(pathSet);
+  }
+  debugger;
+  return collections;
+}
 
 
-function queryByCity(srcCity, destCity, date, cb3) {
-  console.log("Start queryByCity...");
-
-  var results = {};
-  /*
-  async.parallel({
-      collectionsTrain: function(cbCollecTrain) {
-        queryTrain(srcCity, destCity, date, function(err, infoTT) {
-          if (infoTT == null) {
-            console.log("queryTrain Failed: " + err);
-            cbCollecTrain(null, null);
-          } else {
-            console.log("queryTrain success");
-            var results = {};
-            var collections = [];
-            var TTCollections = infoTT.res;
-
-            for (var i = 0; i < TTCollections.length; ++i) {
-              var TTpathSet = TTCollections[i];
-              var cityLength = TTpathSet.city.length;
+function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
+  queryTrain(srcCity, destCity, date, function(err, infoTT) {
+    if (infoTT == null) {
+      console.log("queryTrain Failed: " + err);
+      cbDoQueryTrain(null, null);
+    } else {
+      console.log("queryTrain success");
+      var results = {};
+      var collections = [];
+      var TTCollections = infoTT.res;
 
 
-
-              var pattsrcCity = new RegExp(TTpathSet.city[0]);
-              var pattdestCity = new RegExp(TTpathSet.city[cityLength - 1]);
-
-              //火火，直接返回----------------------
-              if (pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("TT...");
-                paths = Train2Train(TTpathSet);
-
-                pathSet.city = TTpathSet.city;
-                pathSet.path = paths;
-
-
-                collections.push(pathSet);
-                debugger;
-                console.log("TT collections: " + collections);
-                cbCollecTrain(null, collections);
-              }
-
-
-              //火汽------------------------------
-              if (pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("TC...");
-                queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                  if (infoCC == null) {
-                    console.log("queryCoach Failed: " + err);
-                    //cbCollecTrain(null, null);
-                  } else {
-                    console.log("queryCoach success: " + err);
-                    var CCColections = infoCC.res;
-                    for (var j = 0; j < CCColections.length; ++j) {
-              debugger;
-                      var CCpathSet = CCColections[j];
-                      var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
-
-                      collections.push(pathSet);
-                      console.log("TT collections: " + collections);
-                      cbCollecTrain(null, collections);
-                    }
-                  }
-                });
-              }
-
-              //汽火-------------------------------
-              if (!pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("CT...");
-                queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                  if (infoCC == null) {
-                    console.log("queryCoach Failed: " + err);
-                    //cbCollecTrain(null, null);
-                  } else {
-
-                    console.log("queryCoach success");
-
-                    var CCColections = infoCC.res;
-                    for (var j = 0; j < CCColections.length; ++j) {
-                      var CCpathSet = CCColections[j];
-                      //debugger;
-                      var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
-                      collections.push(pathSet);
-                      console.log("TT collections: " + collections);
-                      cbCollecTrain(null, collections);
-                    }
-                  }
-                });
-              }
-
-              //汽火汽-------------------------------
-              if (!pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("CTC...");
-                async.parallel({
-                    srcInfoCC: function(cb) {
-                      queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                        if (infoCC == null) {
-                          console.log("queryCoach Failed for srcInfoCC in async1: " + err);
-                          cb(null, null);
-                        } else {
-                          console.log("queryCoach success");
-                          cb(null, infoCC);
-                        }
-                      });
-                    },
-                    destInfoCC: function(cb) {
-                      queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                        if (infoCC == null) {
-                          console.log("queryCoach Failed for destInfoCC in async2: " + err);
-                          cb(null, null);
-                        } else {
-                          console.log("queryCoach success");
-                          cb(null, infoCC);
-                        }
-                      });
-                    }
-                  },
-                  function(err, asyncRes) {
-                    if (infoCC != null) {
-                      //汽车查询结果，只会有一组城市数据（pathSet）
-                      var srcCCpathSet = asyncRes.srcInfoCC.res[0];
-                      var destCCpathSet = asyncRes.destInfoCC.res[0];
-
-                      var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
-
-                      collections.push(pathSet);
-                      console.log("TT collections: " + collections);
-                      cbCollecTrain(null, collections);
-                    }
-                  }
-                );
-              }
-            }
-          }
-        });
-      },
-      collectionsCoach: function(cbCollecCoach) {
-        queryCoach(srcCity, destCity, date, function(err, infoCC) {
-          debugger;
-          if (infoCC == null) {
-            console.log("queryCoach Failed in async2: " + err);
-            cbCollecCoach(null, null);
-          } else {
-            console.log("queryCoach success");
-
-            var results = {};
-            var collections = [];
-            var CCColections = infoCC.res;
-            for (var i = 0; i < CCColections.length; ++i) {
-
-              var CCpathSet = CCColections[i];
-              var pathSet = {};
-              var paths = [];
-              //var detailPath = {};
-              //detailPath.element = [];
-
-              for (var j = 0; j < CCpathSet.path.length; ++j) {
-                var path = CCpathSet.path[j];
-
-                var detailPath = {};
-                detailPath.element = CCpathSet.path[j];
-
-                detailPath.total_price = 0.0;
-                detailPath.total_time = 0.0;
-                var k = 0;
-                for (; k < detailPath.element.length; ++k) {
-                  detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
-                  detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
-                  if (k + 1 < detailPath.element.length) {
-                    detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
-                  }
-                }
-
-
-                paths.push(detailPath);
-              }
-              pathSet.city = CCpathSet.city;
-              pathSet.path = paths;
-              collections.push(pathSet);
-
-            }
-            console.log("CC collections: " + collections);
-            debugger;
-            cbCollecCoach(null, collections);
-          }
-        });
-      }
-    },
-    function(err, asyncRes) {
-
-      //if (err) {
-      // console.log("async2 Failed: " + err);
-      //  cb3(err, null);
-      //} else {
-      console.log("asyncRes ENter...");
-
-      if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
-        console.log("queryByCity success...");
-
-        if (asyncRes.collectionsCoach != null) {
-          for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
-            //var collecs2 = asyncRes.collectionsCoach[i];
-            asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
-            console.log("xxxx" + asyncRes.collectionsCoach[i]);
-          }
-        }
-        results.res = asyncRes.collectionsTrain;
-        debugger;
-        cb3(null, results);
-      }
-    }
-  );
-*/
-  //queryTrain(srcCity, destCity, date, func);
-
-  //queryCoach(srcCity, destCity, date, funcCoach);
-  var trainHandler = function(cbCollecTrain) {
-    queryTrain(srcCity, destCity, date, function(err, infoTT) {
-      if (infoTT == null) {
-        console.log("queryTrain Failed: " + err);
-        cbCollecTrain(null, null);
-      } else {
-        console.log("queryTrain success");
-        var results = {};
-        var collections = [];
-        var TTCollections = infoTT.res;
-
-        for (var i = 0; i < TTCollections.length; ++i) {
-          var TTpathSet = TTCollections[i];
+      var taskList = [];
+      var index = -1;
+      for (collec in TTCollections) {
+        var task = function(cbTask) {
+          index++;
+          var TTpathSet = TTCollections[index];
           var cityLength = TTpathSet.city.length;
 
 
@@ -330,10 +116,10 @@ function queryByCity(srcCity, destCity, date, cb3) {
             pathSet.path = paths;
 
 
-            collections.push(pathSet);
+            //collections.push(pathSet);
             debugger;
             console.log("TT collections: " + collections);
-            cbCollecTrain(null, collections);
+            cbTask(null, pathSet);
           }
 
 
@@ -354,9 +140,9 @@ function queryByCity(srcCity, destCity, date, cb3) {
                   var CCpathSet = CCColections[j];
                   var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
 
-                  collections.push(pathSet);
+                  //collections.push(pathSet);
                   console.log("TT collections: " + collections);
-                  cbCollecTrain(null, collections);
+                  cbTask(null, pathSet);
                 }
               }
             });
@@ -380,9 +166,9 @@ function queryByCity(srcCity, destCity, date, cb3) {
                   var CCpathSet = CCColections[j];
                   //debugger;
                   var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
-                  collections.push(pathSet);
+                  //collections.push(pathSet);
                   console.log("TT collections: " + collections);
-                  cbCollecTrain(null, collections);
+                  cbTask(null, pathSet);
                 }
               }
             });
@@ -425,17 +211,55 @@ function queryByCity(srcCity, destCity, date, cb3) {
 
                   var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
 
-                  collections.push(pathSet);
+                  //collections.push(pathSet);
                   console.log("TT collections: " + collections);
-                  cbCollecTrain(null, collections);
+                  cbTask(null, pathSet);
                 }
               }
             );
           }
         }
+
+        taskList.push(task);
       }
+
+      var resHandler = function(err, asyncRes) {
+        console.log("async doQueryTrain Enter...");
+        if (err) {
+          console.log("async doQueryTrain Error");
+          cbDoQueryTrain(null, null);
+        }
+        if (asyncRes.length) {
+          console.log("async doQueryTrain Error");
+          var collections = assembleTrainCollection(asyncRes);
+          cbDoQueryTrain(null, collections);
+        }
+      }
+
+      async.parallel(taskList, resHandler);
+
+    }
+
+  });
+}
+
+
+function queryByCity(srcCity, destCity, date, cbByCity) {
+  console.log("Start queryByCity...");
+
+  var results = {};
+
+  var trainHandler = function(cbCollecTrain) {
+    doQueryTrain(srcCity, destCity, date, function(err, collections) {
+      if (collections == null) {
+        console.log("doQueryTrain Failed: " + err);
+        cbCollecTrain(null, null);
+      } else {
+        cbCollecTrain(null, collections);
+      };
+
     });
-  };
+  }
 
   var coachHandler = function(cbCollecCoach) {
     queryCoach(srcCity, destCity, date, function(err, infoCC) {
@@ -490,20 +314,24 @@ function queryByCity(srcCity, destCity, date, cb3) {
   };
 
   var resHandler = function(err, asyncRes) {
-    console.log("asyncRes Enter...");
+    console.log("parallelTasks async Enter...");
+    if (err) {
+      console.log("parallelTasks Error");
+      cbByCity(null, null);
+    } else {
+      if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
+        console.log("parallelTasks success");
 
-    if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
-      console.log("queryByCity success...");
-
-      if (asyncRes.collectionsCoach != null) {
-        for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
-          asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
-          console.log("xxxx" + asyncRes.collectionsCoach[i]);
+        if (asyncRes.collectionsCoach != null) {
+          for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
+            asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
+            console.log("xxxx" + asyncRes.collectionsCoach[i]);
+          }
         }
+        results.res = asyncRes.collectionsTrain;
+        debugger;
+        cbByCity(null, results);
       }
-      results.res = asyncRes.collectionsTrain;
-      debugger;
-      cb3(null, results);
     }
   };
 
@@ -516,11 +344,6 @@ function queryByCity(srcCity, destCity, date, cb3) {
 
 }
 
-function isSameCity(stationName, city, place) {
-  LocationDAO.isInThePlace(stationName, city, place, function(isSame) {
-    return isSame;
-  })
-}
 
 function queryTrain(srcCity, destCity, date, cb) {
   console.log("Start queryTrain...");
