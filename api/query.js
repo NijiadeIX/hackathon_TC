@@ -10,9 +10,6 @@ var CT = "coachtrain";
 
 exports.queryTransport = function(req, res) {
   try{
-    var a;
-    a.b = 1;
-
     var info = {};
     info.srcCity = req.query.StartCity;
     info.destCity = req.query.EndCity;
