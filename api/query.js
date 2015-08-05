@@ -23,7 +23,7 @@ exports.queryTransport = function(req, res) {
         var result = {
           "res": []
         };
-        //res.send(result);
+        res.send(result);
       } else {
        res.send(transCollection);
       }
@@ -33,6 +33,12 @@ exports.queryTransport = function(req, res) {
   {
     log.error('\r\nError Message: ' + e);
     log.error('\r\nError Stack: ' + e.stack);
+    
+    var result = {
+          "res": []
+        };
+    res.send(result);
+
   }
 }
 
