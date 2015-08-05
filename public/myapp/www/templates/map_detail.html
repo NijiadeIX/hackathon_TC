@@ -7,7 +7,7 @@
 
   <ion-content scroll="true" overflow-scroll="true" class="has-header2 iframe-issue">
   	<div class="list">
-		  <a class="item" ng-repeat="items in map_detail_list">
+		  <a class="item" ng-repeat="items in map_detail_list" href="#/app/map_show/{{index_id}}_{{$index}}">
 		  	<div  ng-repeat="item in items.element">
 				<!--
 				<h2 ng-show='item.type == "coach"'>
@@ -26,13 +26,13 @@
 				<div ng-show='item.type == "coach"'>
 					<div class="row">
 						<div class="col col-33 railway_time">{{item.name}}</div>
-						<div class="col col-33 railway_time"><i class="icon ion-model-s"></i></div>
+						<div class="col col-33 "><i class="ion-android-bus railway_time3"></i></div>
 						<div class="col col-20 col-offset-10"> ¥0 </div>
 					</div>
 					<div class="row">
 						<div class="col col-33 railway_time2 ">{{item.depart_time}}</div>
 						<div class="col col-33 railway_detail">出发站:{{item.from_station}}</div>
-						<div class="col col-20 col-offset-10"> 二等座</div>
+						<div class="col col-20 col-offset-10"> 硬座</div>
 					</div>
 					<div class="row">
 						<div class="col col-33 railway_time2 ">{{item.arrive_time}}</div>
@@ -46,7 +46,7 @@
 				<div ng-show='item.type == "train"'>
 					<div class="row">
 						<div class="col col-33 railway_time">{{item.name}}</div>
-						<div class="col col-33 railway_time"><i class="icon ion-android-train"></i></div>
+						<div class="col col-33 railway_time3"><i class="icon ion-android-train"></i></div>
 						<div class="col col-20 col-offset-10"> ¥0 </div>
 					</div>
 					<div class="row">
