@@ -9,24 +9,34 @@ var CT = "coachtrain";
 
 
 exports.queryTransport = function(req, res) {
-  var info = {};
-  info.srcCity = req.query.StartCity;
-  info.destCity = req.query.EndCity;
-  info.srcStation = null;
-  info.destStation = null;
-  info.date = req.query.date;
-  //debugger;
-  var transCollection = queryEnginee(info, function(err, transCollection) {
-    if (transCollection == null) {
-      console.log("queryEnginee Failed: " + err);
-      var result = {
-        "res": []
-      };
-      //res.send(result);
-    } else {
-     res.send(transCollection);
-    }
-  });
+  try{
+    var a;
+    a.b = 1;
+
+    var info = {};
+    info.srcCity = req.query.StartCity;
+    info.destCity = req.query.EndCity;
+    info.srcStation = null;
+    info.destStation = null;
+    info.date = req.query.date;
+    //debugger;
+    var transCollection = queryEnginee(info, function(err, transCollection) {
+      if (transCollection == null) {
+        console.log("queryEnginee Failed: " + err);
+        var result = {
+          "res": []
+        };
+        //res.send(result);
+      } else {
+       res.send(transCollection);
+      }
+    });
+  }
+  catch(e)
+  {
+    log.error('\r\nError Message: ' + e);
+    log.error('\r\nError Stack: ' + e.stack);
+  }
 }
 
 
@@ -115,6 +125,7 @@ function queryByCity(srcCity, destCity, date, cb3) {
             } else {
               var CCColections = infoCC.res;
               for (var j = 0; j < CCColections.length; ++j) {
+
                 var CCpathSet = CCColections[j];
                 var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
                 collections.push(pathSet);
@@ -306,6 +317,7 @@ function queryByCity(srcCity, destCity, date, cb3) {
                     console.log("queryCoach success: " + err);
                     var CCColections = infoCC.res;
                     for (var j = 0; j < CCColections.length; ++j) {
+              debugger;
                       var CCpathSet = CCColections[j];
                       var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
 
@@ -413,20 +425,18 @@ function queryByCity(srcCity, destCity, date, cb3) {
 
               for (var j = 0; j < CCpathSet.path.length; ++j) {
                 var path = CCpathSet.path[j];
-                console.log("CCpathSet.path: " + CCpathSet.path.length);
 
                 var detailPath = {};
-                detailPath.element = [];
+                detailPath.element = CCpathSet.path[j];
 
                 detailPath.total_price = 0.0;
                 detailPath.total_time = 0.0;
                 var k = 0;
-                for (; k < path.length; ++k) {
-                  detailPath.element.push(path[k]);
-                  detailPath.total_price += getLowestPrice(path[k].price_list);
-                  detailPath.total_time += minutesMinus(path[k].depart_time, path[k].arrive_time);
-                  if (k + 1 < path.length) {
-                    detailPath.total_time += minutesMinus(path[k].arrive_time, path[k + 1].depart_time);
+                for (; k < detailPath.element.length; ++k) {
+                  detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+                  detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+                  if (k + 1 < detailPath.element.length) {
+                    detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
                   }
                 }
 
@@ -567,8 +577,6 @@ function doCoach2Coach(TTpathSet, srcPathSet, destPathSet) {
 //能进入该函数的，火汽城市必然相同，因为汽车查询函数只有成功才能进来
 function assemblePoint(TTpathSet, CCpathSet, headType) {
   var pathSet = {};
-  var detailPath = {};
-  detailPath.element = [];
   var paths = [];
 
   //火拼汽
@@ -581,21 +589,23 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
         var CCpath = CCpathSet.path[j];
 
         console.log("TTpath: " + TTpath);
-        var timeGap = minutesMinus(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
-
+        var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+        debugger;
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
-          var path = doAssemble(TTpath, CCpath, headType);
+        var detailPath = {};
+        detailPath.element = doAssemble(TTpath, CCpath, headType);
+
+
           detailPath.total_price = 0.0;
           detailPath.total_time = 0.0;
-          detailPath.element.push(path);
           var k = 0;
-          for (; k < path.length; ++k) {
-            detailPath.total_price += getLowestPrice(path[k].price_list);
-            detailPath.total_time += minutesMinus(path[k].depart_time, path[k].arrive_time);
-            if (k + 1 < path.length) {
-              detailPath.total_time += minutesMinus(path[k].arrive_time, path[k + 1].depart_time);
+          for (; k < detailPath.element.length; ++k) {
+            detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+            detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+            if (k + 1 < detailPath.element.length) {
+              detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
             }
           }
           paths.push(detailPath);
@@ -623,17 +633,17 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
-          var path = doAssemble(CTpath, CCpath, headType);
+        var detailPath = {};
+        detailPath.element = doAssemble(CTpath, CCpath, headType);
 
           detailPath.total_price = 0.0;
           detailPath.total_time = 0.0;
-          detailPath.element.push(path);
           var k = 0;
-          for (; k < path.length; ++k) {
-            detailPath.total_price += getLowestPrice(path[k].price_list);
-            detailPath.total_time += minutesMinus(path[k].depart_time, path[k].arrive_time);
-            if (k + 1 < path.length) {
-              detailPath.total_time += minutesMinus(path[k].arrive_time, path[k + 1].depart_time);
+          for (; k < detailPath.element.length; ++k) {
+            detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+            detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+            if (k + 1 < detailPath.element.length) {
+              detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
             }
           }
           paths.push(detailPath);
@@ -658,16 +668,18 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
-          var path = doAssemble(TTpath, CCpath, headType);
+        var detailPath = {};
+        detailPath.element = doAssemble(TTpath, CCpath, headType);
+
+
           detailPath.total_price = 0.0;
           detailPath.total_time = 0.0;
-          detailPath.element.push(path);
           var k = 0;
-          for (; k < path.length; ++k) {
-            detailPath.total_price += getLowestPrice(path[k].price_list);
-            detailPath.total_time += minutesMinus(path[k].depart_time, path[k].arrive_time);
-            if (k + 1 < path.length) {
-              detailPath.total_time += minutesMinus(path[k].arrive_time, path[k + 1].depart_time);
+          for (; k < detailPath.element.length; ++k) {
+            detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+            detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+            if (k + 1 < detailPath.element.length) {
+              detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
             }
           }
 
@@ -789,6 +801,21 @@ function minutesMinus(early_time, later_time) {
   //return mins;
   return minusTime;
 }
+
+
+
+//乘车间隙
+function minutesGap(early_time, later_time) {
+    var earlyHourMin = early_time.substring(1).split(":");
+    var laterHourMin = later_time.substring(1).split(":");
+    var earlyHour = parseFloat(earlyHourMin[0]);
+    var earlyMin = parseFloat(earlyHourMin[1]);
+    var laterHour = parseFloat(laterHourMin[0]);
+    var laterMin = parseFloat(laterHourMin[1]);
+
+    return (laterHour - earlyHour) * 60 + laterMin - earlyMin;
+}
+
 
 function parseTime(timeStr) {
   var dateStr = Date().toDateString();
