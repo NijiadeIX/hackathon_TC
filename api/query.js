@@ -115,9 +115,6 @@ function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
             pathSet.city = TTpathSet.city;
             pathSet.path = paths;
 
-
-            //collections.push(pathSet);
-            debugger;
             console.log("TT collections: " + collections);
             cbTask(null, pathSet);
           }
@@ -129,6 +126,7 @@ function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
             var pathSet = {};
             console.log("TC...");
             queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
+              debugger;
               if (infoCC == null) {
                 console.log("queryCoach Failed: " + err);
                 //cbCollecTrain(null, null);
@@ -136,12 +134,11 @@ function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
                 console.log("queryCoach success: " + err);
                 var CCColections = infoCC.res;
                 for (var j = 0; j < CCColections.length; ++j) {
-                  debugger;
+                  
                   var CCpathSet = CCColections[j];
                   var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
-
-                  //collections.push(pathSet);
-                  console.log("TT collections: " + collections);
+debugger;
+                  console.log("TC collections: " + collections);
                   cbTask(null, pathSet);
                 }
               }
@@ -167,7 +164,7 @@ function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
                   //debugger;
                   var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
                   //collections.push(pathSet);
-                  console.log("TT collections: " + collections);
+                  console.log("CT collections: " + collections);
                   cbTask(null, pathSet);
                 }
               }
@@ -250,11 +247,13 @@ function queryByCity(srcCity, destCity, date, cbByCity) {
   var results = {};
 
   var trainHandler = function(cbCollecTrain) {
+    console.log("trainHandler start");
     doQueryTrain(srcCity, destCity, date, function(err, collections) {
       if (collections == null) {
-        console.log("doQueryTrain Failed: " + err);
+        console.log("trainHandler Failed");
         cbCollecTrain(null, null);
       } else {
+        console.log("trainHandler success");
         cbCollecTrain(null, collections);
       };
 
@@ -262,13 +261,14 @@ function queryByCity(srcCity, destCity, date, cbByCity) {
   }
 
   var coachHandler = function(cbCollecCoach) {
+    console.log("coachHandler start");
     queryCoach(srcCity, destCity, date, function(err, infoCC) {
       debugger;
       if (infoCC == null) {
-        console.log("queryCoach Failed in async2: " + err);
+        console.log("coachHandler Failed");
         cbCollecCoach(null, null);
       } else {
-        console.log("queryCoach success");
+        console.log("coachHandler success");
 
         var results = {};
         var collections = [];
@@ -314,22 +314,21 @@ function queryByCity(srcCity, destCity, date, cbByCity) {
   };
 
   var resHandler = function(err, asyncRes) {
-    console.log("parallelTasks async Enter...");
+    console.log("resHandler Enter...");
     if (err) {
-      console.log("parallelTasks Error");
+      console.log("resHandler Error");
       cbByCity(null, null);
     } else {
       if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
-        console.log("parallelTasks success");
+        console.log("resHandler success");
 
         if (asyncRes.collectionsCoach != null) {
           for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
             asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
-            console.log("xxxx" + asyncRes.collectionsCoach[i]);
           }
         }
         results.res = asyncRes.collectionsTrain;
-        debugger;
+debugger;
         cbByCity(null, results);
       }
     }
@@ -437,7 +436,7 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
 
         console.log("TTpath: " + TTpath);
         var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
-        debugger;
+        
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
@@ -460,6 +459,45 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
       }
     }
 
+    //如果当天没有数据，则对接到第二天
+    if(paths.length == 0)
+    {
+      for (var i = 0; i < TTpathSet.path.length; ++i) {
+        var TTpath = TTpathSet.path[i];
+        for (var j = 0; j < CCpathSet.path.length; ++j) {
+          debugger;
+          var CCpath = CCpathSet.path[j];
+
+          console.log("TTpath: " + TTpath);
+          var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+          
+          //中间需要间隔30mins
+          if (timeGap > -10000) {
+            //可以对接
+            var detailPath = {};
+            detailPath.element = doAssemble(TTpath, CCpath, headType);
+
+
+            detailPath.total_price = 0.0;
+            detailPath.total_time = 0.0;
+            var k = 0;
+            for (; k < detailPath.element.length; ++k) {
+              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+              if (k + 1 < detailPath.element.length) {
+                //需要将第二天时间更改格式
+
+                //detailPath.element[k + 1].depart_time = formatTime2Tomorrow(detailPath.element[k + 1].depart_time);
+                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
+                //detailPath.element[k + 1].arrive_time = formatTime2Tomorrow(detailPath.element[k + 1].arrive_time);
+              }
+            }
+            paths.push(detailPath);
+          }
+        }
+      }
+    }
+
     console.log("T+C assembelCity");
     pathSet.city = assembelCity(TTpathSet.city, CCpathSet.city, headType);
   }
@@ -467,7 +505,7 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
   //汽＋火 拼 汽
   if (headType == CT) {
     var CTpathSet = TTpathSet;
-    console.log("assemblePoint for TC");
+    console.log("assemblePoint for CTC");
     for (var i = 0; i < CTpathSet.path.length; ++i) {
       var CTpath = CTpathSet.path[i].element;
 
@@ -495,6 +533,8 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
           }
           paths.push(detailPath);
         }
+
+
       }
     }
     console.log("CTpathSet.city: " + CTpathSet.city);
@@ -529,11 +569,49 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
               detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
             }
           }
-
           paths.push(detailPath);
         }
       }
     }
+
+
+    //如果当天没有数据，则对接到第二天
+    if(paths.length == 0)
+    {
+      for (var i = 0; i < TTpathSet.path.length; ++i) {
+        var TTpath = TTpathSet.path[i];
+        for (var j = 0; j < CCpathSet.path.length; ++j) {
+          var CCpath = CCpathSet.path[j];
+
+          console.log("TTpath: " + TTpath);
+          var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+          
+          //中间需要间隔30mins
+          if (timeGap > -10000) {
+            //可以对接
+            var detailPath = {};
+            detailPath.element = doAssemble(TTpath, CCpath, headType);
+
+
+            detailPath.total_price = 0.0;
+            detailPath.total_time = 0.0;
+            var k = 0;
+            for (; k < detailPath.element.length; ++k) {
+              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+              if (k + 1 < detailPath.element.length) {
+                //需要将第二天时间更改格式
+                //detailPath.element[k + 1].depart_time = formatTime2Tomorrow(detailPath.element[k + 1].depart_time);
+                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
+                //detailPath.element[k + 1].arrive_time = formatTime2Tomorrow(detailPath.element[k + 1].arrive_time);
+              }
+            }
+            paths.push(detailPath);
+          }
+        }
+      }
+    }
+
     console.log("TTpathSet.city: " + TTpathSet.city);
     console.log("CCpathSet.city: " + CCpathSet.city);
     pathSet.city = assembelCity(TTpathSet.city, CCpathSet.city, headType);
@@ -545,6 +623,7 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
 
 
 function doAssemble(TTpath, CCpath, headType) {
+  debugger;
   var path = [];
   if (headType == T || headType == CT) {
     for (var i = 0; i < TTpath.length; ++i)
@@ -669,5 +748,8 @@ function parseTime(timeStr) {
   return Date(dateStr + timeStr);
 }
 
-
+function formatTime2Tomorrow(timeStr) {
+  var temp = (parseInt(timeStr.substring(0, 1)) + 1).toString();
+  return temp + timeStr.substring(1);
+}
 exports.queryEnginee = queryEnginee;
