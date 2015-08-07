@@ -11,8 +11,11 @@ var layout = {
 			var stack = err.stack;
 			var stackLines = stack.split('\n');
 			var lastLine = stackLines[stackLines.length - 1];
-			var cells = lastLine.split('\\');
-			var linePos = cells[cells.length - 1].replace(')', '');
+			var beginIdx = lastLine.indexOf('(');
+			var endIdx = lastLine.indexOf(')');
+			var filepath = lastLine.substring(beginIdx + 1, endIdx);
+
+			var linePos = path.basename(filepath);
 
 			return linePos;
 		}
