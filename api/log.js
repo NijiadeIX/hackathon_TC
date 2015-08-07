@@ -2,8 +2,31 @@ var log4js   = require('log4js');
 var path     = require('path');
 var settings = require('../settings/log.json');
 
+var layout = {
+	"type": "pattern",
+	"pattern": "%[[%d] [%p] %x{line} %c - %m%n%]",
+	"tokens": {
+		"line": function() {
+			var err = new Error();
+			var stack = err.stack;
+			var stackLines = stack.split('\n');
+			var lastLine = stackLines[stackLines.length - 1];
+			var cells = lastLine.split('\\');
+			var linePos = cells[cells.length - 1].replace(')', '');
+
+			return linePos;
+		}
+	}
+};
+
+
 function getLogger(category) {
 	if (settings) {
+		var appenders = settings.appenders;
+		for (var idx in appenders) {
+			appenders[idx].layout = layout;
+		}
+
 		log4js.configure(settings);
 	}
 
