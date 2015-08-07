@@ -76,7 +76,8 @@ function _parseTrainData(originData, cityA, cityB, callback) {
 
 	//检查格式，格式不对返回null
 	if (!originData || !originData.content || !(originData.content instanceof Array)) {
-		return null;
+		callback(null);
+		return;
 	}
 
 	var _cityA = cityA;
@@ -207,7 +208,8 @@ function _preParseTrainData(originData, cityA, cityB, callback) {
 
 	//检查格式，格式不对返回null
 	if (!originData || !originData.content || !(originData.content instanceof Array)) {
-		return null;
+		callback(null);
+		return;
 	}
 
 	//遍历content
@@ -487,6 +489,7 @@ function getTrainPath(stationA, cityA, stationB, cityB,  startDate, callback) {
 		// addPrice(_parseTrainData(data), callback);
 		_parseTrainData(data, cityA, cityB, function(data_1) {
 			addPrice(data_1, function(data) {
+				debugger;
 				log.info('train data:');
 				log.info(data);
 				callback(data);
