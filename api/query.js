@@ -7,9 +7,11 @@ var T = "train";
 var C = "coach";
 var CT = "coachtrain";
 
-
+var total_query_count = 0;
 exports.queryTransport = function(req, res) {
-  try{
+  try {
+    total_query_count++;
+    console.log("TOTAL QUERY COUNT: " + total_query_count);
     var info = {};
     info.srcCity = req.query.StartCity;
     info.destCity = req.query.EndCity;
@@ -23,16 +25,20 @@ exports.queryTransport = function(req, res) {
         var result = {
           "res": []
         };
-        //res.send(result);
+        res.send(result);
       } else {
-       res.send(transCollection);
+        res.send(transCollection);
       }
     });
-  }
-  catch(e)
-  {
+  } catch (e) {
     log.error('\r\nError Message: ' + e);
     log.error('\r\nError Stack: ' + e.stack);
+
+    var result = {
+      "res": []
+    };
+    res.send(result);
+
   }
 }
 
@@ -47,11 +53,6 @@ function queryEnginee(transInfo, cb) {
   var destCity = transInfo.destCity;
 
   var date = transInfo.date;
-  /*if (!date) {
-    var myDate = new Date();
-    date = myDate.getFullYear() + "-" + myDate.getMonth() + "-" + myDate.getDate();
-  }
-  */
   console.log(date);
 
   queryByCity(srcCity, destCity, date, function(err, results) {
@@ -68,432 +69,280 @@ function queryEnginee(transInfo, cb) {
 
 }
 
+function assembleTrainCollection(asyncRes) {
+  var collections = [];
+  for (var i = 0; i < asyncRes.length; ++i) {
+    var pathSet = asyncRes[i];
+    collections.push(pathSet);
+  }
+  debugger;
+  return collections;
+}
 
 
-function queryByCity(srcCity, destCity, date, cb3) {
-  console.log("Start queryByCity...");
-
-  var func = function(err, infoTT) {
-
-    if (err) {
+function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
+  queryTrain(srcCity, destCity, date, function(err, infoTT) {
+    if (infoTT == null) {
       console.log("queryTrain Failed: " + err);
-      cb2(err, null);
+      cbDoQueryTrain(null, null);
     } else {
+      console.log("queryTrain success");
       var results = {};
       var collections = [];
       var TTCollections = infoTT.res;
 
-      for (var i = 0; i < TTCollections.length; ++i) {
-        var TTpathSet = TTCollections[i];
-        var cityLength = TTpathSet.city.length;
+
+      var taskList = [];
+      var index = -1;
+      for (collec in TTCollections) {
+        var task = function(cbTask) {
+          index++;
+          var TTpathSet = TTCollections[index];
+          var cityLength = TTpathSet.city.length;
 
 
 
-        //火火，直接返回----------------------
-        //if (srcCity == TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
-        var pattsrcCity = new RegExp(TTpathSet.city[0]);
-        var pattdestCity = new RegExp(TTpathSet.city[cityLength - 1]);
-        //debugger;
-        //if (srcCity == TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
-        if (pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
-          var paths = [];
-          var pathSet = {};
-          console.log("TT...");
-          paths = Train2Train(TTpathSet);
+          var pattsrcCity = new RegExp(TTpathSet.city[0]);
+          var pattdestCity = new RegExp(TTpathSet.city[cityLength - 1]);
 
-          pathSet.city = TTpathSet.city;
-          pathSet.path = paths;
+          //火火，直接返回----------------------
+          if (pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
+            var paths = [];
+            var pathSet = {};
+            console.log("TT...");
+            paths = Train2Train(TTpathSet);
 
+            pathSet.city = TTpathSet.city;
+            pathSet.path = paths;
 
-          collections.push(pathSet);
-        }
-
-
-        //火汽------------------------------
-        //if (srcCity == TTpathSet.city[0] && destCity != TTpathSet.city[cityLength - 1]) {
-        if (pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
-          var paths = [];
-          var pathSet = {};
-          console.log("TC...");
-          queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-            if (err) {
-              console.log("queryCoach Failed: " + err);
-              cb2(err, null);
-            } else {
-              var CCColections = infoCC.res;
-              for (var j = 0; j < CCColections.length; ++j) {
-
-                var CCpathSet = CCColections[j];
-                var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
-                collections.push(pathSet);
-              }
-            }
-          });
-        }
-
-        //汽火-------------------------------
-        //if (srcCity != TTpathSet.city[0] && destCity == TTpathSet.city[cityLength - 1]) {
-        if (!pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
-          var paths = [];
-          var pathSet = {};
-          console.log("CT...");
-          queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-            if (err) {
-              console.log("queryCoach Failed: " + err);
-              cb2(err, null);
-            } else {
-
-              console.log("queryCoach success");
-
-              var CCColections = infoCC.res;
-              for (var j = 0; j < CCColections.length; ++j) {
-                var CCpathSet = CCColections[j];
-                //debugger;
-                var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
-                collections.push(pathSet);
-              }
-            }
-          });
-        }
-        var t01, t02;
-        //汽火汽-------------------------------
-        //if (srcCity != TTpathSet.city[0] && destCity != TTpathSet.city[cityLength - 1]) {
-        if (!pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
-          var paths = [];
-          var pathSet = {};
-          console.log("CTC...");
-          async.parallel({
-              srcInfoCC: function(cb) {
-                queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                  if (err) {
-                    console.log("queryCoach Failed for srcInfoCC: " + err);
-                    cb2(err, null);
-                  } else {
-                    console.log("queryCoach success");
-                    cb(null, infoCC);
-                  }
-                });
-              },
-              destInfoCC: function(cb) {
-                queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                  if (err) {
-                    console.log("queryCoach Failed for destInfoCC: " + err);
-                    cb2(err, null);
-                  } else {
-                    console.log("queryCoach success");
-                    cb(null, infoCC);
-                  }
-                });
-              }
-            },
-            function(err, asyncRes) {
-              if (err) {
-                console.log("async Failed: " + err);
-                cb2(err, null);
-              } else {
-                //汽车查询结果，只会有一组城市数据（pathSet）
-                var srcCCpathSet = asyncRes.srcInfoCC.res[0];
-                var destCCpathSet = asyncRes.destInfoCC.res[0];
-
-                var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
-
-                collections.push(pathSet);
-              }
-            }
-          );
-        }
-      }
-
-
-      console.log("queryByCity success...");
-      console.log("collections: " + collections);
-      results.res = collections;
-      cb3(null, results);
-    }
-  };
-
-  var funcCoach = function(err, infoCC) {
-    if (err) {
-      console.log("queryCoach Failed for infoCC: " + err);
-      cb2(err, null);
-    } else {
-      console.log("queryCoach success");
-
-      var results = {};
-      var collections = [];
-      var CCColections = infoCC.res;
-      for (var i = 0; i < CCColections.length; ++i) {
-        var CCpathSet = CCColections[j];
-        var pathSet = {};
-        var paths = [];
-        var detailPath = {};
-        detailPath.element = [];
-
-        for (var j = 0; j < CCpathSet.path.length; ++j) {
-          var path = CCpathSet.path[j];
-          //          var detailPath = {};
-          //          detailPath.element = [];
-
-          detailPath.total_price = 0.0;
-          detailPath.total_time = 0.0;
-
-          var k = 0;
-          for (; k < path.length; ++k) {
-            detailPath.element.push(path[k]);
-            detailPath.total_price += getLowestPrice(path[k].price_list);
-            detailPath.total_time += minutesMinus(path[k].depart_time, path[k].arrive_time);
-            if (k + 1 < path.length) {
-              detailPath.total_time += minutesMinus(path[k].arrive_time, path[k + 1].depart_time);
-            }
+            console.log("TT collections: " + collections);
+            cbTask(null, pathSet);
           }
 
-          paths.push(detailPath);
+
+          //火汽------------------------------
+          if (pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
+            var paths = [];
+            var pathSet = {};
+            console.log("TC...");
+            queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
+              debugger;
+              if (infoCC == null) {
+                console.log("queryCoach Failed: " + err);
+                //cbCollecTrain(null, null);
+              } else {
+                console.log("queryCoach success: " + err);
+                var CCColections = infoCC.res;
+                for (var j = 0; j < CCColections.length; ++j) {
+                  
+                  var CCpathSet = CCColections[j];
+                  var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
+debugger;
+                  console.log("TC collections: " + collections);
+                  cbTask(null, pathSet);
+                }
+              }
+            });
+          }
+
+          //汽火-------------------------------
+          if (!pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
+            var paths = [];
+            var pathSet = {};
+            console.log("CT...");
+            queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
+              if (infoCC == null) {
+                console.log("queryCoach Failed: " + err);
+                //cbCollecTrain(null, null);
+              } else {
+
+                console.log("queryCoach success");
+
+                var CCColections = infoCC.res;
+                for (var j = 0; j < CCColections.length; ++j) {
+                  var CCpathSet = CCColections[j];
+                  //debugger;
+                  var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
+                  //collections.push(pathSet);
+                  console.log("CT collections: " + collections);
+                  cbTask(null, pathSet);
+                }
+              }
+            });
+          }
+
+          //汽火汽-------------------------------
+          if (!pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
+            var paths = [];
+            var pathSet = {};
+            console.log("CTC...");
+            async.parallel({
+                srcInfoCC: function(cb) {
+                  queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
+                    if (infoCC == null) {
+                      console.log("queryCoach Failed for srcInfoCC in async1: " + err);
+                      cb(null, null);
+                    } else {
+                      console.log("queryCoach success");
+                      cb(null, infoCC);
+                    }
+                  });
+                },
+                destInfoCC: function(cb) {
+                  queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
+                    if (infoCC == null) {
+                      console.log("queryCoach Failed for destInfoCC in async2: " + err);
+                      cb(null, null);
+                    } else {
+                      console.log("queryCoach success");
+                      cb(null, infoCC);
+                    }
+                  });
+                }
+              },
+              function(err, asyncRes) {
+                if (infoCC != null) {
+                  //汽车查询结果，只会有一组城市数据（pathSet）
+                  var srcCCpathSet = asyncRes.srcInfoCC.res[0];
+                  var destCCpathSet = asyncRes.destInfoCC.res[0];
+
+                  var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
+
+                  //collections.push(pathSet);
+                  console.log("TT collections: " + collections);
+                  cbTask(null, pathSet);
+                }
+              }
+            );
+          }
         }
 
-        pathSet.city = CCpathSet.city;
-        pathSet.path = paths;
-        collections.push(pathSet);
+        taskList.push(task);
       }
-      results.res = collections;
 
-      cb3(null, results);
+      var resHandler = function(err, asyncRes) {
+        console.log("async doQueryTrain Enter...");
+        if (err) {
+          console.log("async doQueryTrain Error");
+          cbDoQueryTrain(null, null);
+        }
+        if (asyncRes.length) {
+          console.log("async doQueryTrain Error");
+          var collections = assembleTrainCollection(asyncRes);
+          cbDoQueryTrain(null, collections);
+        }
+      }
+
+      async.parallel(taskList, resHandler);
+
     }
-  };
+
+  });
+}
+
+
+function queryByCity(srcCity, destCity, date, cbByCity) {
+  console.log("Start queryByCity...");
 
   var results = {};
 
-  async.parallel({
-      collectionsTrain: function(cbCollecTrain) {
-        queryTrain(srcCity, destCity, date, function(err, infoTT) {
-          if (infoTT == null) {
-            console.log("queryTrain Failed: " + err);
-            cbCollecTrain(null, null);
-          } else {
-            console.log("queryTrain success");
-            var results = {};
-            var collections = [];
-            var TTCollections = infoTT.res;
+  var trainHandler = function(cbCollecTrain) {
+    console.log("trainHandler start");
+    doQueryTrain(srcCity, destCity, date, function(err, collections) {
+      if (collections == null) {
+        console.log("trainHandler Failed");
+        cbCollecTrain(null, null);
+      } else {
+        console.log("trainHandler success");
+        cbCollecTrain(null, collections);
+      };
 
-            for (var i = 0; i < TTCollections.length; ++i) {
-              var TTpathSet = TTCollections[i];
-              var cityLength = TTpathSet.city.length;
+    });
+  }
 
+  var coachHandler = function(cbCollecCoach) {
+    console.log("coachHandler start");
+    queryCoach(srcCity, destCity, date, function(err, infoCC) {
+      debugger;
+      if (infoCC == null) {
+        console.log("coachHandler Failed");
+        cbCollecCoach(null, null);
+      } else {
+        console.log("coachHandler success");
 
+        var results = {};
+        var collections = [];
+        var CCColections = infoCC.res;
+        for (var i = 0; i < CCColections.length; ++i) {
 
-              var pattsrcCity = new RegExp(TTpathSet.city[0]);
-              var pattdestCity = new RegExp(TTpathSet.city[cityLength - 1]);
+          var CCpathSet = CCColections[i];
+          var pathSet = {};
+          var paths = [];
+          //var detailPath = {};
+          //detailPath.element = [];
 
-              //火火，直接返回----------------------
-              if (pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("TT...");
-                paths = Train2Train(TTpathSet);
+          for (var j = 0; j < CCpathSet.path.length; ++j) {
+            var path = CCpathSet.path[j];
 
-                pathSet.city = TTpathSet.city;
-                pathSet.path = paths;
+            var detailPath = {};
+            detailPath.element = CCpathSet.path[j];
 
-
-                collections.push(pathSet);
-                debugger;
-                console.log("TT collections: " + collections);
-                cbCollecTrain(null, collections);
-              }
-
-
-              //火汽------------------------------
-              if (pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("TC...");
-                queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                  if (infoCC == null) {
-                    console.log("queryCoach Failed: " + err);
-                    //cbCollecTrain(null, null);
-                  } else {
-                    console.log("queryCoach success: " + err);
-                    var CCColections = infoCC.res;
-                    for (var j = 0; j < CCColections.length; ++j) {
-              debugger;
-                      var CCpathSet = CCColections[j];
-                      var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
-
-                      collections.push(pathSet);
-                      console.log("TT collections: " + collections);
-                      cbCollecTrain(null, collections);
-                    }
-                  }
-                });
-              }
-
-              //汽火-------------------------------
-              if (!pattsrcCity.test(srcCity) && pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("CT...");
-                queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                  if (infoCC == null) {
-                    console.log("queryCoach Failed: " + err);
-                    //cbCollecTrain(null, null);
-                  } else {
-
-                    console.log("queryCoach success");
-
-                    var CCColections = infoCC.res;
-                    for (var j = 0; j < CCColections.length; ++j) {
-                      var CCpathSet = CCColections[j];
-                      //debugger;
-                      var pathSet = assemblePoint(TTpathSet, CCpathSet, C); //失败的话 怎么办
-                      collections.push(pathSet);
-                      console.log("TT collections: " + collections);
-                      cbCollecTrain(null, collections);
-                    }
-                  }
-                });
-              }
-
-              //汽火汽-------------------------------
-              if (!pattsrcCity.test(srcCity) && !pattdestCity.test(destCity)) {
-                var paths = [];
-                var pathSet = {};
-                console.log("CTC...");
-                async.parallel({
-                    srcInfoCC: function(cb) {
-                      queryCoach(srcCity, TTpathSet.city[0], date, function(err, infoCC) {
-                        if (infoCC == null) {
-                          console.log("queryCoach Failed for srcInfoCC in async1: " + err);
-                          cb(null, null);
-                        } else {
-                          console.log("queryCoach success");
-                          cb(null, infoCC);
-                        }
-                      });
-                    },
-                    destInfoCC: function(cb) {
-                      queryCoach(TTpathSet.city[cityLength - 1], destCity, date, function(err, infoCC) {
-                        if (infoCC == null) {
-                          console.log("queryCoach Failed for destInfoCC in async2: " + err);
-                          cb(null, null);
-                        } else {
-                          console.log("queryCoach success");
-                          cb(null, infoCC);
-                        }
-                      });
-                    }
-                  },
-                  function(err, asyncRes) {
-                    if (infoCC != null) {
-                      //汽车查询结果，只会有一组城市数据（pathSet）
-                      var srcCCpathSet = asyncRes.srcInfoCC.res[0];
-                      var destCCpathSet = asyncRes.destInfoCC.res[0];
-
-                      var pathSet = doCoach2Coach(TTpathSet, srcCCpathSet, destCCpathSet);
-
-                      collections.push(pathSet);
-                      console.log("TT collections: " + collections);
-                      cbCollecTrain(null, collections);
-                    }
-                  }
-                );
+            detailPath.total_price = 0.0;
+            detailPath.total_time = 0.0;
+            var k = 0;
+            for (; k < detailPath.element.length; ++k) {
+              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+              if (k + 1 < detailPath.element.length) {
+                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
               }
             }
+
+
+            paths.push(detailPath);
           }
-        });
-      },
-      collectionsCoach: function(cbCollecCoach) {
-        queryCoach(srcCity, destCity, date, function(err, infoCC) {
-          debugger;
-          if (infoCC == null) {
-            console.log("queryCoach Failed in async2: " + err);
-            cbCollecCoach(null, null);
-          } else {
-            console.log("queryCoach success");
+          pathSet.city = CCpathSet.city;
+          pathSet.path = paths;
+          collections.push(pathSet);
 
-            var results = {};
-            var collections = [];
-            var CCColections = infoCC.res;
-            for (var i = 0; i < CCColections.length; ++i) {
-
-              var CCpathSet = CCColections[i];
-              var pathSet = {};
-              var paths = [];
-              //var detailPath = {};
-              //detailPath.element = [];
-
-              for (var j = 0; j < CCpathSet.path.length; ++j) {
-                var path = CCpathSet.path[j];
-
-                var detailPath = {};
-                detailPath.element = CCpathSet.path[j];
-
-                detailPath.total_price = 0.0;
-                detailPath.total_time = 0.0;
-                var k = 0;
-                for (; k < detailPath.element.length; ++k) {
-                  detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
-                  detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
-                  if (k + 1 < detailPath.element.length) {
-                    detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
-                  }
-                }
-
-
-                paths.push(detailPath);
-              }
-              pathSet.city = CCpathSet.city;
-              pathSet.path = paths;
-              collections.push(pathSet);
-
-            }
-            console.log("CC collections: " + collections);
-            debugger;
-            cbCollecCoach(null, collections);
-          }
-        });
+        }
+        console.log("CC collections: " + collections);
+        debugger;
+        cbCollecCoach(null, collections);
       }
-    },
-    function(err, asyncRes) {
+    });
+  };
 
-      //if (err) {
-      // console.log("async2 Failed: " + err);
-      //  cb3(err, null);
-      //} else {
-      console.log("asyncRes ENter...");
-
+  var resHandler = function(err, asyncRes) {
+    console.log("resHandler Enter...");
+    if (err) {
+      console.log("resHandler Error");
+      cbByCity(null, null);
+    } else {
       if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
-        console.log("queryByCity success...");
+        console.log("resHandler success");
 
         if (asyncRes.collectionsCoach != null) {
           for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
-            //var collecs2 = asyncRes.collectionsCoach[i];
             asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
-            console.log("xxxx" + asyncRes.collectionsCoach[i]);
           }
         }
         results.res = asyncRes.collectionsTrain;
-        debugger;
-        cb3(null, results);
+debugger;
+        cbByCity(null, results);
       }
     }
-  );
+  };
 
-  //queryTrain(srcCity, destCity, date, func);
+  var parallelTasks = {
+    collectionsTrain: trainHandler,
+    collectionsCoach: coachHandler
+  };
 
-  //queryCoach(srcCity, destCity, date, funcCoach);
-  /*
-    var parallelTasks = 
-    {
+  async.parallel(parallelTasks, resHandler)
 
-    }
-    async.parallel(parallelTasks, resHandler)
-    */
 }
 
-function isSameCity(stationName, city, place) {
-  LocationDAO.isInThePlace(stationName, city, place, function(isSame) {
-    return isSame;
-  })
-}
 
 function queryTrain(srcCity, destCity, date, cb) {
   console.log("Start queryTrain...");
@@ -587,12 +436,12 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
 
         console.log("TTpath: " + TTpath);
         var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
-        debugger;
+        
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
-        var detailPath = {};
-        detailPath.element = doAssemble(TTpath, CCpath, headType);
+          var detailPath = {};
+          detailPath.element = doAssemble(TTpath, CCpath, headType);
 
 
           detailPath.total_price = 0.0;
@@ -610,6 +459,45 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
       }
     }
 
+    //如果当天没有数据，则对接到第二天
+    if(paths.length == 0)
+    {
+      for (var i = 0; i < TTpathSet.path.length; ++i) {
+        var TTpath = TTpathSet.path[i];
+        for (var j = 0; j < CCpathSet.path.length; ++j) {
+          debugger;
+          var CCpath = CCpathSet.path[j];
+
+          console.log("TTpath: " + TTpath);
+          var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+          
+          //中间需要间隔30mins
+          if (timeGap > -10000) {
+            //可以对接
+            var detailPath = {};
+            detailPath.element = doAssemble(TTpath, CCpath, headType);
+
+
+            detailPath.total_price = 0.0;
+            detailPath.total_time = 0.0;
+            var k = 0;
+            for (; k < detailPath.element.length; ++k) {
+              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+              if (k + 1 < detailPath.element.length) {
+                //需要将第二天时间更改格式
+
+                //detailPath.element[k + 1].depart_time = formatTime2Tomorrow(detailPath.element[k + 1].depart_time);
+                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
+                //detailPath.element[k + 1].arrive_time = formatTime2Tomorrow(detailPath.element[k + 1].arrive_time);
+              }
+            }
+            paths.push(detailPath);
+          }
+        }
+      }
+    }
+
     console.log("T+C assembelCity");
     pathSet.city = assembelCity(TTpathSet.city, CCpathSet.city, headType);
   }
@@ -617,7 +505,7 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
   //汽＋火 拼 汽
   if (headType == CT) {
     var CTpathSet = TTpathSet;
-    console.log("assemblePoint for TC");
+    console.log("assemblePoint for CTC");
     for (var i = 0; i < CTpathSet.path.length; ++i) {
       var CTpath = CTpathSet.path[i].element;
 
@@ -630,8 +518,8 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
-        var detailPath = {};
-        detailPath.element = doAssemble(CTpath, CCpath, headType);
+          var detailPath = {};
+          detailPath.element = doAssemble(CTpath, CCpath, headType);
 
           detailPath.total_price = 0.0;
           detailPath.total_time = 0.0;
@@ -645,6 +533,8 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
           }
           paths.push(detailPath);
         }
+
+
       }
     }
     console.log("CTpathSet.city: " + CTpathSet.city);
@@ -665,8 +555,8 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
         //中间需要间隔30mins
         if (timeGap > 30) {
           //可以对接
-        var detailPath = {};
-        detailPath.element = doAssemble(TTpath, CCpath, headType);
+          var detailPath = {};
+          detailPath.element = doAssemble(TTpath, CCpath, headType);
 
 
           detailPath.total_price = 0.0;
@@ -679,11 +569,49 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
               detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
             }
           }
-
           paths.push(detailPath);
         }
       }
     }
+
+
+    //如果当天没有数据，则对接到第二天
+    if(paths.length == 0)
+    {
+      for (var i = 0; i < TTpathSet.path.length; ++i) {
+        var TTpath = TTpathSet.path[i];
+        for (var j = 0; j < CCpathSet.path.length; ++j) {
+          var CCpath = CCpathSet.path[j];
+
+          console.log("TTpath: " + TTpath);
+          var timeGap = minutesGap(TTpath[TTpath.length - 1].arrive_time, CCpath[0].depart_time); //一定要注意这儿的第二个下标取值
+          
+          //中间需要间隔30mins
+          if (timeGap > -10000) {
+            //可以对接
+            var detailPath = {};
+            detailPath.element = doAssemble(TTpath, CCpath, headType);
+
+
+            detailPath.total_price = 0.0;
+            detailPath.total_time = 0.0;
+            var k = 0;
+            for (; k < detailPath.element.length; ++k) {
+              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+              if (k + 1 < detailPath.element.length) {
+                //需要将第二天时间更改格式
+                //detailPath.element[k + 1].depart_time = formatTime2Tomorrow(detailPath.element[k + 1].depart_time);
+                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
+                //detailPath.element[k + 1].arrive_time = formatTime2Tomorrow(detailPath.element[k + 1].arrive_time);
+              }
+            }
+            paths.push(detailPath);
+          }
+        }
+      }
+    }
+
     console.log("TTpathSet.city: " + TTpathSet.city);
     console.log("CCpathSet.city: " + CCpathSet.city);
     pathSet.city = assembelCity(TTpathSet.city, CCpathSet.city, headType);
@@ -695,6 +623,7 @@ function assemblePoint(TTpathSet, CCpathSet, headType) {
 
 
 function doAssemble(TTpath, CCpath, headType) {
+  debugger;
   var path = [];
   if (headType == T || headType == CT) {
     for (var i = 0; i < TTpath.length; ++i)
@@ -803,14 +732,14 @@ function minutesMinus(early_time, later_time) {
 
 //乘车间隙
 function minutesGap(early_time, later_time) {
-    var earlyHourMin = early_time.substring(1).split(":");
-    var laterHourMin = later_time.substring(1).split(":");
-    var earlyHour = parseFloat(earlyHourMin[0]);
-    var earlyMin = parseFloat(earlyHourMin[1]);
-    var laterHour = parseFloat(laterHourMin[0]);
-    var laterMin = parseFloat(laterHourMin[1]);
+  var earlyHourMin = early_time.substring(1).split(":");
+  var laterHourMin = later_time.substring(1).split(":");
+  var earlyHour = parseFloat(earlyHourMin[0]);
+  var earlyMin = parseFloat(earlyHourMin[1]);
+  var laterHour = parseFloat(laterHourMin[0]);
+  var laterMin = parseFloat(laterHourMin[1]);
 
-    return (laterHour - earlyHour) * 60 + laterMin - earlyMin;
+  return (laterHour - earlyHour) * 60 + laterMin - earlyMin;
 }
 
 
@@ -819,5 +748,8 @@ function parseTime(timeStr) {
   return Date(dateStr + timeStr);
 }
 
-
+function formatTime2Tomorrow(timeStr) {
+  var temp = (parseInt(timeStr.substring(0, 1)) + 1).toString();
+  return temp + timeStr.substring(1);
+}
 exports.queryEnginee = queryEnginee;

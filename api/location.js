@@ -55,7 +55,7 @@ function isInThePlace(stationName, city, place, callback) {
 
 	var handler = function(err, statusCode, data) {
 		if (err) {
-			log.err(err.name + ':' + err.message);
+			log.error(err.name + ':' + err.message);
 			callback(false);
 			return;
 		}

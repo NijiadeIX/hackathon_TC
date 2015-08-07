@@ -90,5 +90,16 @@ p.thought:after{
 
 .railway_time3 {
 	font: bold 23px Tahoma;
-	color:rgb(52, 152, 219);
+	color:rgb(28, 134, 238);
+}
+
+
+.railway_time4 {
+	font: bold 23px Tahoma;
+	color:rgb(238,0,0);
+	
+}
+
+.railway_detail {
+	overflow:hidden;
 }

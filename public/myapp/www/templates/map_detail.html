@@ -1,11 +1,14 @@
 <ion-view title="路线详情">
 
+
+<!--
 <div class="bar bar-subheader">
 	<h2 class="title"> {{citys}} </h2>
 	<a ng-click="time_sort()" class="button button-icon icon ion-ios7-clock-outline"></a>
 </div>
+-->
 
-  <ion-content scroll="true" overflow-scroll="true" class="has-header2 iframe-issue">
+  <ion-content scroll="true" overflow-scroll="true" >
   	<div class="list">
 		  <a class="item" ng-repeat="items in map_detail_list" href="#/app/map_show/{{index_id}}_{{$index}}">
 		  	<div  ng-repeat="item in items.element">
@@ -15,7 +18,6 @@
 					<spin class="railway_detail">出发站:{{item.from_station}}  终点站:{{item.to_station}}</spin> </br>
 					<spin>车次:{{item.name}} 出发时间:{{item.depart_time}}  到达时间:{{item.arrive_time}} </spin>
 				</h2>
-
 				
 				<h2 ng-show='item.type == "train"'>
 					<spin class="railway_time positive"> <i class="icon ion-android-train"> </i> {{item.name}} </spin> </br>
@@ -26,18 +28,18 @@
 				<div ng-show='item.type == "coach"'>
 					<div class="row">
 						<div class="col col-33 railway_time">{{item.name}}</div>
-						<div class="col col-33 "><i class="ion-android-bus railway_time3"></i></div>
+						<div class="col col-33 "><i class="ion-android-bus railway_time4"></i></div>
 						<div class="col col-20 col-offset-10"> ¥0 </div>
 					</div>
 					<div class="row">
 						<div class="col col-33 railway_time2 ">{{item.depart_time}}</div>
-						<div class="col col-33 railway_detail">出发站:{{item.from_station}}</div>
+						<div class="col col-33 railway_detail">{{item.from_station}}</div>
 						<div class="col col-20 col-offset-10"> 硬座</div>
 					</div>
 					<div class="row">
 						<div class="col col-33 railway_time2 ">{{item.arrive_time}}</div>
-						<div class="col col-33 railway_detail">终点站:{{item.to_station}}</div>
-						<div class="col col-20 col-offset-10"> 200张</div>
+						<div class="col col-33 railway_detail">{{item.to_station}}</div>
+						<div class="col col-20 col-offset-10"> ...张</div>
 					</div>
 				</div>
 
@@ -51,19 +53,19 @@
 					</div>
 					<div class="row">
 						<div class="col col-33 railway_time2 ">{{item.depart_time}}</div>
-						<div class="col col-33 railway_detail">出发站:{{item.from_station}}</div>
+						<div class="col col-33 railway_detail">{{item.from_station}}</div>
 						<div class="col col-20 col-offset-10"> 二等座</div>
 					</div>
 					<div class="row">
 						<div class="col col-33 railway_time2 ">{{item.arrive_time}}</div>
-						<div class="col col-33 railway_detail">终点站:{{item.to_station}}</div>
-						<div class="col col-20 col-offset-10"> 200张</div>
+						<div class="col col-33 railway_detail">{{item.to_station}}</div>
+						<div class="col col-20 col-offset-10"> ...张</div>
 					</div>
 				</div>
 				
 			</div>
 			<p>
-			总时长 {{items.total_time}}
+			总时长 {{items.total_time}}分钟
 		  	</p>
 		  </a>
 		  

@@ -63,8 +63,9 @@ function testParse() {
 
 function getTrainPath() {
 	debugger;
-	train.getTrainPath('柳州市',null, '上海市',null, null, function(data) {
+	train.getTrainPath(null, '上海市', null, '上林县', null, function(data) {
 		data.res[0].path.forEach(function(cell) {
+			debugger;
 			console.log(cell);
 		});
 	});
