@@ -65,18 +65,108 @@ function queryEnginee(transInfo, cb) {
       cb(null, results);
     }
   });
-
-
 }
 
-function assembleTrainCollection(asyncRes) {
-  var collections = [];
-  for (var i = 0; i < asyncRes.length; ++i) {
-    var pathSet = asyncRes[i];
-    collections.push(pathSet);
+
+function queryByCity(srcCity, destCity, date, cbByCity) {
+  console.log("Start queryByCity...");
+
+  var results = {};
+
+  var trainHandler = function(cbCollecTrain) {
+    console.log("trainHandler start");
+    doQueryTrain(srcCity, destCity, date, function(err, collections) {
+      if (collections == null) {
+        console.log("trainHandler Failed");
+        cbCollecTrain(null, null);
+      } else {
+        console.log("trainHandler success");
+        cbCollecTrain(null, collections);
+      };
+
+    });
   }
-  debugger;
-  return collections;
+
+  var coachHandler = function(cbCollecCoach) {
+    console.log("coachHandler start");
+    queryCoach(srcCity, destCity, date, function(err, infoCC) {
+      debugger;
+      if (infoCC == null) {
+        console.log("coachHandler Failed");
+        cbCollecCoach(null, null);
+      } else {
+        console.log("coachHandler success");
+
+        var results = {};
+        var collections = [];
+        var CCColections = infoCC.res;
+        for (var i = 0; i < CCColections.length; ++i) {
+
+          var CCpathSet = CCColections[i];
+          var pathSet = {};
+          var paths = [];
+          //var detailPath = {};
+          //detailPath.element = [];
+
+          for (var j = 0; j < CCpathSet.path.length; ++j) {
+            var path = CCpathSet.path[j];
+
+            var detailPath = {};
+            detailPath.element = CCpathSet.path[j];
+
+            detailPath.total_price = 0.0;
+            detailPath.total_time = 0.0;
+            var k = 0;
+            for (; k < detailPath.element.length; ++k) {
+              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
+              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
+              if (k + 1 < detailPath.element.length) {
+                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
+              }
+            }
+
+
+            paths.push(detailPath);
+          }
+          pathSet.city = CCpathSet.city;
+          pathSet.path = paths;
+          collections.push(pathSet);
+
+        }
+        console.log("CC collections: " + collections);
+        debugger;
+        cbCollecCoach(null, collections);
+      }
+    });
+  };
+
+  var resHandler = function(err, asyncRes) {
+    console.log("resHandler Enter...");
+    if (err) {
+      console.log("resHandler Error");
+      cbByCity(null, null);
+    } else {
+      if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
+        console.log("resHandler success");
+
+        if (asyncRes.collectionsCoach != null) {
+          for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
+            asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
+          }
+        }
+        results.res = asyncRes.collectionsTrain;
+        cbByCity(null, results);
+      }
+    }
+  };
+
+  var parallelTasks = {
+    collectionsTrain: trainHandler,
+    collectionsCoach: coachHandler
+  };
+
+  async.parallel(parallelTasks, resHandler)
+
 }
 
 
@@ -137,7 +227,6 @@ function doQueryTrain(srcCity, destCity, date, cbDoQueryTrain) {
                   
                   var CCpathSet = CCColections[j];
                   var pathSet = assemblePoint(TTpathSet, CCpathSet, T); //失败的话 怎么办
-debugger;
                   console.log("TC collections: " + collections);
                   cbTask(null, pathSet);
                 }
@@ -241,107 +330,17 @@ debugger;
 }
 
 
-function queryByCity(srcCity, destCity, date, cbByCity) {
-  console.log("Start queryByCity...");
-
-  var results = {};
-
-  var trainHandler = function(cbCollecTrain) {
-    console.log("trainHandler start");
-    doQueryTrain(srcCity, destCity, date, function(err, collections) {
-      if (collections == null) {
-        console.log("trainHandler Failed");
-        cbCollecTrain(null, null);
-      } else {
-        console.log("trainHandler success");
-        cbCollecTrain(null, collections);
-      };
-
-    });
+function assembleTrainCollection(asyncRes) {
+  var collections = [];
+  for (var i = 0; i < asyncRes.length; ++i) {
+    var pathSet = asyncRes[i];
+    collections.push(pathSet);
   }
-
-  var coachHandler = function(cbCollecCoach) {
-    console.log("coachHandler start");
-    queryCoach(srcCity, destCity, date, function(err, infoCC) {
-      debugger;
-      if (infoCC == null) {
-        console.log("coachHandler Failed");
-        cbCollecCoach(null, null);
-      } else {
-        console.log("coachHandler success");
-
-        var results = {};
-        var collections = [];
-        var CCColections = infoCC.res;
-        for (var i = 0; i < CCColections.length; ++i) {
-
-          var CCpathSet = CCColections[i];
-          var pathSet = {};
-          var paths = [];
-          //var detailPath = {};
-          //detailPath.element = [];
-
-          for (var j = 0; j < CCpathSet.path.length; ++j) {
-            var path = CCpathSet.path[j];
-
-            var detailPath = {};
-            detailPath.element = CCpathSet.path[j];
-
-            detailPath.total_price = 0.0;
-            detailPath.total_time = 0.0;
-            var k = 0;
-            for (; k < detailPath.element.length; ++k) {
-              detailPath.total_price += getLowestPrice(detailPath.element[k].price_list);
-              detailPath.total_time += minutesMinus(detailPath.element[k].depart_time, detailPath.element[k].arrive_time);
-              if (k + 1 < detailPath.element.length) {
-                detailPath.total_time += minutesMinus(detailPath.element[k].arrive_time, detailPath.element[k + 1].depart_time);
-              }
-            }
-
-
-            paths.push(detailPath);
-          }
-          pathSet.city = CCpathSet.city;
-          pathSet.path = paths;
-          collections.push(pathSet);
-
-        }
-        console.log("CC collections: " + collections);
-        debugger;
-        cbCollecCoach(null, collections);
-      }
-    });
-  };
-
-  var resHandler = function(err, asyncRes) {
-    console.log("resHandler Enter...");
-    if (err) {
-      console.log("resHandler Error");
-      cbByCity(null, null);
-    } else {
-      if (asyncRes.collectionsTrain || asyncRes.collectionsCoach) {
-        console.log("resHandler success");
-
-        if (asyncRes.collectionsCoach != null) {
-          for (var i = 0; i < asyncRes.collectionsCoach.length; ++i) {
-            asyncRes.collectionsTrain.push(asyncRes.collectionsCoach[i]);
-          }
-        }
-        results.res = asyncRes.collectionsTrain;
-debugger;
-        cbByCity(null, results);
-      }
-    }
-  };
-
-  var parallelTasks = {
-    collectionsTrain: trainHandler,
-    collectionsCoach: coachHandler
-  };
-
-  async.parallel(parallelTasks, resHandler)
-
+  debugger;
+  return collections;
 }
+
+
 
 
 function queryTrain(srcCity, destCity, date, cb) {
@@ -364,7 +363,6 @@ function queryCoach(srcName, destName, date, cb) {
   console.log("Start queryCoach...");
 
   CoachDAO.getCoachPath(null, srcName, null, destName, date, function(info) {
-    debugger;
     if (!info || !info.res) {
       console.log("CoachDAO.getCoachPath Failed");
       cb(null, null);
@@ -380,7 +378,7 @@ function queryCoach(srcName, destName, date, cb) {
 function Train2Train(TTpathSet) {
   console.log("Start Train2Train...");
   var paths = [];
-  debugger;
+
   for (var j = 0; j < TTpathSet.path.length; ++j) {
     var path = TTpathSet.path[j];
     var detailPath = {};

@@ -455,7 +455,7 @@ function _getTrainPath(cityA, stationA, cityB, stationB, startDate, callback) {
 			sc : 1,
 			ec : 1,
 			pn : 0,
-			rn : 5			
+			rn : 30			
 		}
 	};
 
